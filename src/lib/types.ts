@@ -10,15 +10,15 @@ export type Transaction = {
 };
 
 export const TransactionCategories = [
-  'Food',
+  'Nourriture',
   'Transport',
-  'Salary',
-  'Housing',
-  'Utilities',
-  'Entertainment',
-  'Health',
+  'Salaire',
+  'Logement',
+  'Factures',
+  'Divertissement',
+  'Santé',
   'Shopping',
-  'Other',
+  'Autre',
 ] as const;
 
 export type TransactionCategory = typeof TransactionCategories[number];

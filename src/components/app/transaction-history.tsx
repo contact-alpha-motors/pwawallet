@@ -11,13 +11,13 @@ export function TransactionHistory() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Transaction History</CardTitle>
+        <CardTitle>Historique des transactions</CardTitle>
       </CardHeader>
       <CardContent>
         {transactions.length === 0 ? (
           <div className="text-center text-muted-foreground py-12">
-            <p>No transactions yet.</p>
-            <p>Click the '+' button to add your first one!</p>
+            <p>Aucune transaction pour le moment.</p>
+            <p>Cliquez sur le bouton '+' pour ajouter votre première transaction !</p>
           </div>
         ) : (
           <ul className="space-y-4">

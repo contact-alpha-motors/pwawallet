@@ -3,11 +3,12 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTransactions } from '@/providers/transactions-provider';
-import { ArrowDownLeft, ArrowUpRight, PiggyBank } from 'lucide-react';
+import { ArrowDownLeft, PiggyBank } from 'lucide-react';
 import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(amount);
 };
 
 export function DashboardSummary() {
@@ -41,22 +42,22 @@ export function DashboardSummary() {
     <div className="grid gap-4 md:grid-cols-2">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
+          <CardTitle className="text-sm font-medium">Solde Actuel</CardTitle>
           <PiggyBank className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{formatCurrency(summary.balance)}</div>
-          <p className="text-xs text-muted-foreground">Your total available funds</p>
+          <p className="text-xs text-muted-foreground">Vos fonds totaux disponibles</p>
         </CardContent>
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Monthly Expenses</CardTitle>
+          <CardTitle className="text-sm font-medium">Dépenses Mensuelles</CardTitle>
           <ArrowDownLeft className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-red-500">{formatCurrency(summary.monthlyExpense)}</div>
-          <p className="text-xs text-muted-foreground">Expenses for {format(new Date(), 'MMMM')}</p>
+          <p className="text-xs text-muted-foreground">Dépenses pour {format(new Date(), 'MMMM', { locale: fr })}</p>
         </CardContent>
       </Card>
     </div>

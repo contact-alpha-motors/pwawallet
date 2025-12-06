@@ -28,13 +28,14 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { fr } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
 import { useTransactions } from "@/providers/transactions-provider";
 import { TransactionCategories } from "@/lib/types";
 
 const formSchema = z.object({
-  amount: z.coerce.number().positive("Amount must be positive"),
-  description: z.string().min(2, "Description must be at least 2 characters."),
+  amount: z.coerce.number().positive("Le montant doit être positif"),
+  description: z.string().min(2, "La description doit comporter au moins 2 caractères."),
   category: z.enum(TransactionCategories),
   type: z.enum(["income", "expense"]),
   date: z.date(),
@@ -76,12 +77,12 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select transaction type" />
+                    <SelectValue placeholder="Sélectionner le type de transaction" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="income">Income</SelectItem>
-                  <SelectItem value="expense">Expense</SelectItem>
+                  <SelectItem value="income">Revenu</SelectItem>
+                  <SelectItem value="expense">Dépense</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -93,7 +94,7 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
           name="amount"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Amount</FormLabel>
+              <FormLabel>Montant</FormLabel>
               <FormControl>
                 <Input type="number" placeholder="0.00" {...field} />
               </FormControl>
@@ -108,7 +109,7 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Groceries" {...field} />
+                <Input placeholder="ex: Courses" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -119,11 +120,11 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
           name="category"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Category</FormLabel>
+              <FormLabel>Catégorie</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
+                    <SelectValue placeholder="Sélectionner une catégorie" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -153,9 +154,9 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
                       )}
                     >
                       {field.value ? (
-                        format(field.value, "PPP")
+                        format(field.value, "PPP", { locale: fr })
                       ) : (
-                        <span>Pick a date</span>
+                        <span>Choisir une date</span>
                       )}
                       <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
@@ -174,7 +175,7 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full">Add Transaction</Button>
+        <Button type="submit" className="w-full">Ajouter la transaction</Button>
       </form>
     </Form>
   );

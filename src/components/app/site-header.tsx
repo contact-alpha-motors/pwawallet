@@ -1,13 +1,34 @@
 "use client";
 
 import { useState } from 'react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Settings, Wallet } from "lucide-react";
+import { Settings, Wallet, FileDown } from "lucide-react";
 import { ResetDataDialog } from './reset-data-dialog';
+import { useTransactions } from '@/providers/transactions-provider';
+import { format } from 'date-fns';
 
 export function SiteHeader() {
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const { transactions } = useTransactions();
+
+  const handleExport = () => {
+    const worksheet = XLSX.utils.json_to_sheet(transactions.map(t => ({
+      Date: format(new Date(t.date), 'yyyy-MM-dd'),
+      Description: t.description,
+      Montant: t.amount,
+      Type: t.type === 'income' ? 'Revenu' : 'Dépense',
+      Catégorie: t.category
+    })));
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Transactions');
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
+    saveAs(data, `transactions-${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
 
   return (
     <>
@@ -15,19 +36,24 @@ export function SiteHeader() {
         <div className="container flex h-14 items-center max-w-4xl">
           <div className="mr-4 flex items-center">
             <Wallet className="h-6 w-6 mr-2 text-primary" />
-            <span className="font-bold">MyWallet PWA</span>
+            <span className="font-bold">MonPortefeuille</span>
           </div>
           <div className="flex flex-1 items-center justify-end space-x-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Settings className="h-5 w-5" />
-                  <span className="sr-only">Settings</span>
+                  <span className="sr-only">Paramètres</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setIsResetDialogOpen(true)}>
-                  Reset Data
+                <DropdownMenuItem onClick={handleExport}>
+                  <FileDown className="mr-2 h-4 w-4" />
+                  Exporter vers Excel
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setIsResetDialogOpen(true)} className="text-destructive">
+                  Réinitialiser les données
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

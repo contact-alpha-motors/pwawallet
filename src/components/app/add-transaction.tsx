@@ -23,14 +23,14 @@ export function AddTransaction() {
           <Button
             className="fixed bottom-4 right-4 h-16 w-16 rounded-full shadow-lg"
             size="icon"
-            aria-label="Add transaction"
+            aria-label="Ajouter une transaction"
           >
             <Plus className="h-8 w-8" />
           </Button>
         </SheetTrigger>
         <SheetContent side="bottom" className="rounded-t-lg">
           <SheetHeader>
-            <SheetTitle>Add Transaction</SheetTitle>
+            <SheetTitle>Ajouter une transaction</SheetTitle>
           </SheetHeader>
           <div className="p-4">
             <TransactionForm onSuccess={handleSuccess} />
@@ -46,14 +46,14 @@ export function AddTransaction() {
         <Button
           className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg"
           size="icon"
-          aria-label="Add transaction"
+          aria-label="Ajouter une transaction"
         >
           <Plus className="h-8 w-8" />
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Transaction</DialogTitle>
+          <DialogTitle>Ajouter une transaction</DialogTitle>
         </DialogHeader>
         <TransactionForm onSuccess={handleSuccess} />
       </DialogContent>

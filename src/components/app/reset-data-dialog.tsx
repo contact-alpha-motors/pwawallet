@@ -25,8 +25,8 @@ export function ResetDataDialog({ open, onOpenChange }: ResetDataDialogProps) {
   const handleReset = () => {
     clearTransactions();
     toast({
-      title: "Data Reset",
-      description: "All your transaction data has been cleared.",
+      title: "Données réinitialisées",
+      description: "Toutes vos données de transaction ont été effacées.",
     });
     onOpenChange(false);
   };
@@ -35,16 +35,16 @@ export function ResetDataDialog({ open, onOpenChange }: ResetDataDialogProps) {
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogTitle>Êtes-vous absolument sûr(e) ?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete all your
-            transaction data from this device.
+            Cette action est irréversible. Cela supprimera définitivement toutes vos
+            données de transaction de cet appareil.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Annuler</AlertDialogCancel>
           <AlertDialogAction onClick={handleReset} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-            Yes, reset data
+            Oui, réinitialiser
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
