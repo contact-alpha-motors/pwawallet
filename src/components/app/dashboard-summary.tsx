@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTransactions } from '@/providers/transactions-provider';
 import { ArrowDownLeft, PiggyBank } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Skeleton } from '../ui/skeleton';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(amount);
@@ -13,6 +14,11 @@ const formatCurrency = (amount: number) => {
 
 export function DashboardSummary() {
   const { transactions } = useTransactions();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const summary = useMemo(() => {
     const now = new Date();
@@ -37,6 +43,33 @@ export function DashboardSummary() {
 
     return { balance, monthlyExpense };
   }, [transactions]);
+
+  if (!isClient) {
+    return (
+        <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Solde Actuel</CardTitle>
+                    <PiggyBank className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <Skeleton className="h-8 w-3/4" />
+                    <Skeleton className="h-4 w-1/2 mt-1" />
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Dépenses Mensuelles</CardTitle>
+                    <ArrowDownLeft className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <Skeleton className="h-8 w-3/4" />
+                    <Skeleton className="h-4 w-1/2 mt-1" />
+                </CardContent>
+            </Card>
+        </div>
+    )
+  }
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
