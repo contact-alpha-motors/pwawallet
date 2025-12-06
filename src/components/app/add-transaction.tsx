@@ -29,12 +29,12 @@ export function AddTransaction() {
             <Plus className="h-8 w-8" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="bottom" className="rounded-t-lg h-[90dvh] flex flex-col">
-          <SheetHeader>
+        <SheetContent side="bottom" className="rounded-t-lg h-[90dvh] flex flex-col p-0">
+          <SheetHeader className="p-6 pb-0">
             <SheetTitle>Ajouter une transaction</SheetTitle>
           </SheetHeader>
           <ScrollArea className="flex-1">
-            <div className="p-4 pt-0">
+            <div className="p-6">
                 <TransactionForm onSuccess={handleSuccess} />
             </div>
           </ScrollArea>
@@ -54,12 +54,14 @@ export function AddTransaction() {
           <Plus className="h-8 w-8" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90dvh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-h-[90dvh] flex flex-col p-0">
+        <DialogHeader className="p-6 pb-0">
           <DialogTitle>Ajouter une transaction</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="flex-1 pr-6 -mr-6">
+        <ScrollArea className="flex-1">
+          <div className="p-6">
             <TransactionForm onSuccess={handleSuccess} />
+          </div>
         </ScrollArea>
       </DialogContent>
     </Dialog>
