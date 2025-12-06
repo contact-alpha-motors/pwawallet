@@ -4,6 +4,7 @@ import { TransactionsProvider } from '@/providers/transactions-provider';
 import { Toaster } from '@/components/ui/toaster';
 import { ServiceWorker } from '@/components/service-worker';
 import { DayPickerConfig } from '@/components/app/day-picker-config';
+import { CategoriesProvider } from '@/providers/categories-provider';
 
 export const metadata: Metadata = {
   title: 'MonPortefeuille PWA',
@@ -29,9 +30,11 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <DayPickerConfig />
-        <TransactionsProvider>
-          {children}
-        </TransactionsProvider>
+        <CategoriesProvider>
+          <TransactionsProvider>
+            {children}
+          </TransactionsProvider>
+        </CategoriesProvider>
         <Toaster />
         <ServiceWorker />
       </body>

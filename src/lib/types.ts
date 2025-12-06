@@ -9,7 +9,7 @@ export type Transaction = {
   type: TransactionType;
 };
 
-export const TransactionCategories = [
+export const defaultCategories = [
   'Nourriture',
   'Transport',
   'Salaire',
@@ -21,4 +21,4 @@ export const TransactionCategories = [
   'Autre',
 ] as const;
 
-export type TransactionCategory = typeof TransactionCategories[number];
+export type TransactionCategory = (typeof defaultCategories)[number];

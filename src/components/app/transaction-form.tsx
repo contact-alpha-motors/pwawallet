@@ -31,12 +31,12 @@ import { format } from "date-fns";
 import { fr } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
 import { useTransactions } from "@/providers/transactions-provider";
-import { TransactionCategories } from "@/lib/types";
+import { useCategories } from "@/providers/categories-provider";
 
 const formSchema = z.object({
   amount: z.coerce.number().positive("Le montant doit être positif"),
   description: z.string().min(2, "La description doit comporter au moins 2 caractères."),
-  category: z.enum(TransactionCategories),
+  category: z.string().min(1, "Veuillez sélectionner une catégorie."),
   type: z.enum(["income", "expense"]),
   date: z.date(),
 });
@@ -49,6 +49,8 @@ interface TransactionFormProps {
 
 export function TransactionForm({ onSuccess }: TransactionFormProps) {
   const { addTransaction } = useTransactions();
+  const { categories } = useCategories();
+
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -56,6 +58,7 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
       description: "",
       type: "expense",
       date: new Date(),
+      category: "",
     },
   });
 
@@ -128,7 +131,7 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {TransactionCategories.map(cat => (
+                  {categories.map(cat => (
                     <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                   ))}
                 </SelectContent>

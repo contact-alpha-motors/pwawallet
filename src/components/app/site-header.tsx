@@ -5,13 +5,15 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Settings, Wallet, FileDown } from "lucide-react";
+import { Settings, Wallet, FileDown, FolderKanban } from "lucide-react";
 import { ResetDataDialog } from './reset-data-dialog';
 import { useTransactions } from '@/providers/transactions-provider';
 import { format } from 'date-fns';
+import { ManageCategoriesDialog } from './manage-categories-dialog';
 
 export function SiteHeader() {
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [isCategoriesDialogOpen, setIsCategoriesDialogOpen] = useState(false);
   const { transactions } = useTransactions();
 
   const handleExport = () => {
@@ -47,6 +49,10 @@ export function SiteHeader() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setIsCategoriesDialogOpen(true)}>
+                  <FolderKanban className="mr-2 h-4 w-4" />
+                  Gérer les catégories
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleExport}>
                   <FileDown className="mr-2 h-4 w-4" />
                   Exporter vers Excel
@@ -61,6 +67,7 @@ export function SiteHeader() {
         </div>
       </header>
       <ResetDataDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen} />
+      <ManageCategoriesDialog open={isCategoriesDialogOpen} onOpenChange={setIsCategoriesDialogOpen} />
     </>
   );
 }
