@@ -2,7 +2,7 @@
 
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowDownCircle, ArrowUpCircle, Trash2, Utensils, Car, Building, Tv, HeartPulse, ShoppingCart, Grip, Briefcase } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, Trash2, Utensils, Car, Building, Tv, HeartPulse, ShoppingCart, Grip, Briefcase, TrendingUp } from 'lucide-react';
 import type { Transaction, TransactionCategory } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -44,17 +44,26 @@ export function TransactionItem({ transaction }: TransactionItemProps) {
             <Icon className="h-5 w-5 text-red-600 dark:text-red-400" />
            }
         </div>
-        <div>
-          <p className="font-semibold">{transaction.description}</p>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold truncate" title={transaction.beneficiary}>{transaction.beneficiary}</p>
+          <p className="text-sm text-muted-foreground truncate">
+            {transaction.description}
+          </p>
           <p className="text-sm text-muted-foreground">
-            {format(new Date(transaction.date), 'd MMM, yyyy', { locale: fr })} &bull; {transaction.category}
+            {format(new Date(transaction.date), 'd MMM, yyyy', { locale: fr })} &bull; {transaction.category} ({transaction.domain})
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-4">
-        <p className={cn('font-semibold', isIncome ? 'text-green-600' : 'text-red-600')}>
-          {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
-        </p>
+      <div className="flex items-center gap-4 ml-2">
+        <div className='text-right'>
+            <p className={cn('font-semibold', isIncome ? 'text-green-600' : 'text-red-600')}>
+            {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
+            </p>
+            <p className="text-xs text-muted-foreground flex items-center justify-end gap-1">
+                <TrendingUp className="h-3 w-3" />
+                {formatCurrency(transaction.balance)}
+            </p>
+        </div>
         <Button
           variant="ghost"
           size="icon"

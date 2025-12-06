@@ -19,10 +19,13 @@ export function SiteHeader() {
   const handleExport = () => {
     const worksheet = XLSX.utils.json_to_sheet(transactions.map(t => ({
       Date: format(new Date(t.date), 'yyyy-MM-dd'),
-      Description: t.description,
+      Bénéficiaire: t.beneficiary,
+      Motif: t.description,
       Montant: t.amount,
       Type: t.type === 'income' ? 'Revenu' : 'Dépense',
-      Catégorie: t.category
+      Catégorie: t.category,
+      Domaine: t.domain,
+      Solde: t.balance,
     })));
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Transactions');

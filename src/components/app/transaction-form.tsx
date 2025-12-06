@@ -32,11 +32,14 @@ import { fr } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
 import { useTransactions } from "@/providers/transactions-provider";
 import { useCategories } from "@/providers/categories-provider";
+import { defaultDomains } from "@/lib/types";
 
 const formSchema = z.object({
   amount: z.coerce.number().positive("Le montant doit être positif"),
-  description: z.string().min(2, "La description doit comporter au moins 2 caractères."),
+  description: z.string().min(2, "Le motif doit comporter au moins 2 caractères.").optional(),
+  beneficiary: z.string().min(2, "Le bénéficiaire doit comporter au moins 2 caractères."),
   category: z.string().min(1, "Veuillez sélectionner une catégorie."),
+  domain: z.string().min(1, "Veuillez sélectionner un domaine."),
   type: z.enum(["income", "expense"]),
   date: z.date(),
 });
@@ -56,14 +59,19 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
     defaultValues: {
       amount: 0,
       description: "",
+      beneficiary: "",
       type: "expense",
       date: new Date(),
       category: "",
+      domain: "",
     },
   });
 
   function onSubmit(values: TransactionFormValues) {
-    addTransaction(values);
+    addTransaction({
+      ...values,
+      description: values.description || ""
+    });
     form.reset();
     onSuccess?.();
   }
@@ -107,12 +115,25 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
         />
         <FormField
           control={form.control}
+          name="beneficiary"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Bénéficiaire</FormLabel>
+              <FormControl>
+                <Input placeholder="ex: John Doe" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>Motif</FormLabel>
               <FormControl>
-                <Input placeholder="ex: Courses" {...field} />
+                <Input placeholder="ex: Achat de matériel" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -133,6 +154,28 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
                 <SelectContent>
                   {categories.map(cat => (
                     <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="domain"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Domaine</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un domaine" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {(defaultDomains as readonly string[]).map(dom => (
+                    <SelectItem key={dom} value={dom}>{dom}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

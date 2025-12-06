@@ -13,7 +13,7 @@ const formatCurrency = (amount: number) => {
 };
 
 export function DashboardSummary() {
-  const { transactions } = useTransactions();
+  const { transactions, getLatestBalance } = useTransactions();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -24,25 +24,20 @@ export function DashboardSummary() {
     const now = new Date();
     const currentMonth = format(now, 'yyyy-MM');
     
-    let totalIncome = 0;
-    let totalExpense = 0;
     let monthlyExpense = 0;
 
     for (const t of transactions) {
-      if (t.type === 'income') {
-        totalIncome += t.amount;
-      } else {
-        totalExpense += t.amount;
+      if (t.type === 'expense') {
         if (t.date.startsWith(currentMonth)) {
             monthlyExpense += t.amount;
         }
       }
     }
     
-    const balance = totalIncome - totalExpense;
+    const balance = getLatestBalance();
 
     return { balance, monthlyExpense };
-  }, [transactions]);
+  }, [transactions, getLatestBalance]);
 
   if (!isClient) {
     return (
