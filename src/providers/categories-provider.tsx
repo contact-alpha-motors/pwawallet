@@ -22,7 +22,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
   }, [customCategories, setCustomCategories]);
 
   const deleteCategory = useCallback((category: string) => {
-    setCustomCategories(prev => prev.filter(c => c !== category));
+    setCustomCategories(prev => prev.filter(c => c.toLowerCase() !== category.toLowerCase()));
   }, [setCustomCategories]);
 
   const categories = useMemo(() => {
