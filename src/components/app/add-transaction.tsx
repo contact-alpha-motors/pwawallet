@@ -7,7 +7,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus } from "lucide-react";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TransactionForm } from './transaction-form';
-import { ScrollArea } from '../ui/scroll-area';
 
 export function AddTransaction() {
   const [open, setOpen] = useState(false);
@@ -33,11 +32,11 @@ export function AddTransaction() {
           <SheetHeader className="p-6 pb-0 flex-shrink-0">
             <SheetTitle>Ajouter une transaction</SheetTitle>
           </SheetHeader>
-          <ScrollArea className="flex-grow">
+          <div className="flex-grow overflow-y-auto">
             <div className="p-6 pt-4">
                 <TransactionForm onSuccess={handleSuccess} />
             </div>
-          </ScrollArea>
+          </div>
         </SheetContent>
       </Sheet>
     );
@@ -58,11 +57,11 @@ export function AddTransaction() {
         <DialogHeader className="p-6 pb-0 flex-shrink-0">
           <DialogTitle>Ajouter une transaction</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="flex-grow">
+        <div className="flex-grow overflow-y-auto">
           <div className="p-6 pt-4">
             <TransactionForm onSuccess={handleSuccess} />
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
