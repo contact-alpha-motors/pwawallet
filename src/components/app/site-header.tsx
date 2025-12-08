@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -6,18 +5,16 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Settings, Wallet, FileDown, FolderKanban, Wifi, WifiOff, Target } from "lucide-react";
+import { Settings, Wallet, FileDown, FolderKanban } from "lucide-react";
 import { ResetDataDialog } from './reset-data-dialog';
 import { useTransactions } from '@/providers/transactions-provider';
 import { format } from 'date-fns';
 import { ManageCategoriesDialog } from './manage-categories-dialog';
-import { SetBudgetDialog } from './set-budget-dialog';
 
 export function SiteHeader() {
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isCategoriesDialogOpen, setIsCategoriesDialogOpen] = useState(false);
-  const [isBudgetDialogOpen, setIsBudgetDialogOpen] = useState(false);
-  const { transactions, isOffline } = useTransactions();
+  const { transactions } = useTransactions();
 
   const handleExport = () => {
     const worksheet = XLSX.utils.json_to_sheet(transactions.map(t => ({
@@ -33,9 +30,10 @@ export function SiteHeader() {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Transactions');
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-T' });
+    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
     saveAs(data, `transactions-${new Date().toISOString().split('T')[0]}.xlsx`);
   };
+
 
   return (
     <>
@@ -45,22 +43,7 @@ export function SiteHeader() {
             <Wallet className="h-6 w-6 mr-2 text-primary" />
             <span className="font-bold">MonPortefeuille</span>
           </div>
-
-          <div className="flex flex-1 items-center justify-end space-x-4">
-            <div className="flex items-center gap-2">
-              {isOffline ? (
-                <>
-                  <WifiOff className="h-4 w-4 text-destructive" />
-                  <span className="text-sm text-destructive font-medium">Hors ligne</span>
-                </>
-              ) : (
-                <>
-                  <Wifi className="h-4 w-4 text-green-600" />
-                  <span className="text-sm text-green-600 font-medium">En ligne</span>
-                </>
-              )}
-            </div>
-            
+          <div className="flex flex-1 items-center justify-end space-x-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -69,15 +52,11 @@ export function SiteHeader() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setIsBudgetDialogOpen(true)}>
-                  <Target className="mr-2 h-4 w-4" />
-                  Définir le budget
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setIsCategoriesDialogOpen(true)}>
                   <FolderKanban className="mr-2 h-4 w-4" />
                   Gérer les catégories
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExport} disabled={transactions.length === 0}>
+                <DropdownMenuItem onClick={handleExport}>
                   <FileDown className="mr-2 h-4 w-4" />
                   Exporter vers Excel
                 </DropdownMenuItem>
@@ -92,7 +71,6 @@ export function SiteHeader() {
       </header>
       <ResetDataDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen} />
       <ManageCategoriesDialog open={isCategoriesDialogOpen} onOpenChange={setIsCategoriesDialogOpen} />
-      <SetBudgetDialog open={isBudgetDialogOpen} onOpenChange={setIsBudgetDialogOpen} />
     </>
   );
 }
