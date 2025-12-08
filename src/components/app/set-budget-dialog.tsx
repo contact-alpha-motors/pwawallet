@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect } from 'react';
@@ -46,7 +47,7 @@ export function SetBudgetDialog({ open, onOpenChange }: SetBudgetDialogProps) {
 
   const handleSetBudget = (values: BudgetFormValues) => {
     setBudget(values.budget);
-    onOpenChange(false);
+    onOpenChange(false); // Close the dialog on success
   };
 
   return (
