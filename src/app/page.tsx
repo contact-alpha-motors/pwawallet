@@ -4,8 +4,38 @@ import { SiteHeader } from '@/components/app/site-header';
 import { DashboardSummary } from '@/components/app/dashboard-summary';
 import { TransactionHistory } from '@/components/app/transaction-history';
 import { AddTransaction } from '@/components/app/add-transaction';
+import { useUser } from '@/firebase';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
+  const { user, isUserLoading } = useUser();
+
+  if (isUserLoading) {
+    return (
+      <div className="flex flex-col min-h-dvh bg-background font-body">
+        <SiteHeader />
+        <main className="flex-1 w-full max-w-4xl mx-auto p-4 md:p-6 space-y-6">
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-64 w-full" />
+        </main>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+        <div className="flex flex-col min-h-dvh bg-background font-body">
+            <SiteHeader />
+            <main className="flex-1 w-full max-w-4xl mx-auto p-4 md:p-6 flex items-center justify-center">
+                <div className="text-center">
+                    <h2 className="text-2xl font-bold mb-2">Bienvenue sur MonPortefeuille</h2>
+                    <p className="text-muted-foreground">Veuillez patienter, nous vous connectons de manière sécurisée...</p>
+                </div>
+            </main>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col min-h-dvh bg-background font-body">
       <SiteHeader />

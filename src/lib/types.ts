@@ -9,7 +9,8 @@ export const defaultDomains: readonly Domain[] = [
   'Autre',
 ];
 
-export type Transaction = {
+// This represents the data structure in Firestore
+export interface TransactionFirestore {
   id: string;
   amount: number;
   description: string;
@@ -18,8 +19,13 @@ export type Transaction = {
   type: TransactionType;
   beneficiary: string;
   domain: string;
+}
+
+// This represents the data structure in the client, with the calculated balance
+export type Transaction = TransactionFirestore & {
   balance: number;
 };
+
 
 export const defaultCategories = [
   'Nourriture',

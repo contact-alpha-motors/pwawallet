@@ -1,7 +1,6 @@
 "use client";
 
-import { createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
-import { useLocalStorage } from '@/hooks/use-local-storage';
+import { createContext, useContext, ReactNode, useMemo, useCallback, useState } from 'react';
 import { defaultCategories, TransactionCategory } from '@/lib/types';
 
 interface CategoriesContextType {
@@ -13,7 +12,7 @@ interface CategoriesContextType {
 const CategoriesContext = createContext<CategoriesContextType | undefined>(undefined);
 
 export function CategoriesProvider({ children }: { children: ReactNode }) {
-  const [customCategories, setCustomCategories] = useLocalStorage<string[]>('custom-categories', []);
+  const [customCategories, setCustomCategories] = useState<string[]>([]);
 
   const addCategory = useCallback((category: string) => {
     if (category && !defaultCategories.includes(category as TransactionCategory) && !customCategories.includes(category)) {

@@ -9,6 +9,7 @@ import type { Transaction } from '@/lib/types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Badge } from '../ui/badge';
+import { Skeleton } from '../ui/skeleton';
 
 interface GroupedTransactions {
   [key: string]: {
@@ -22,7 +23,7 @@ const formatCurrency = (amount: number) => {
 };
 
 export function TransactionHistory() {
-  const { transactions } = useTransactions();
+  const { transactions, isLoading } = useTransactions();
 
   const groupedTransactions = useMemo(() => {
     return transactions.reduce((acc: GroupedTransactions, transaction) => {
@@ -39,6 +40,22 @@ export function TransactionHistory() {
   }, [transactions]);
 
   const sortedDates = Object.keys(groupedTransactions).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+  
+  if (isLoading) {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Historique des transactions</CardTitle>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+                <Skeleton className="h-8 w-1/2" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+            </CardContent>
+        </Card>
+    )
+  }
 
   return (
     <Card>

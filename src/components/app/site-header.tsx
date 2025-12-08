@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Settings, Wallet, FileDown, FolderKanban } from "lucide-react";
+import { Settings, Wallet, FileDown, FolderKanban, Wifi, WifiOff } from "lucide-react";
 import { ResetDataDialog } from './reset-data-dialog';
 import { useTransactions } from '@/providers/transactions-provider';
 import { format } from 'date-fns';
@@ -14,7 +14,7 @@ import { ManageCategoriesDialog } from './manage-categories-dialog';
 export function SiteHeader() {
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isCategoriesDialogOpen, setIsCategoriesDialogOpen] = useState(false);
-  const { transactions } = useTransactions();
+  const { transactions, isOffline } = useTransactions();
 
   const handleExport = () => {
     const worksheet = XLSX.utils.json_to_sheet(transactions.map(t => ({
@@ -43,7 +43,22 @@ export function SiteHeader() {
             <Wallet className="h-6 w-6 mr-2 text-primary" />
             <span className="font-bold">MonPortefeuille</span>
           </div>
-          <div className="flex flex-1 items-center justify-end space-x-2">
+
+          <div className="flex flex-1 items-center justify-end space-x-4">
+            <div className="flex items-center gap-2">
+              {isOffline ? (
+                <>
+                  <WifiOff className="h-4 w-4 text-destructive" />
+                  <span className="text-sm text-destructive font-medium">Hors ligne</span>
+                </>
+              ) : (
+                <>
+                  <Wifi className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-green-600 font-medium">En ligne</span>
+                </>
+              )}
+            </div>
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -56,7 +71,7 @@ export function SiteHeader() {
                   <FolderKanban className="mr-2 h-4 w-4" />
                   Gérer les catégories
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExport}>
+                <DropdownMenuItem onClick={handleExport} disabled={transactions.length === 0}>
                   <FileDown className="mr-2 h-4 w-4" />
                   Exporter vers Excel
                 </DropdownMenuItem>

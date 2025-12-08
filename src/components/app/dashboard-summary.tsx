@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTransactions } from '@/providers/transactions-provider';
 import { ArrowDownLeft, PiggyBank } from 'lucide-react';
@@ -13,12 +13,7 @@ const formatCurrency = (amount: number) => {
 };
 
 export function DashboardSummary() {
-  const { transactions, getLatestBalance } = useTransactions();
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const { transactions, getLatestBalance, isLoading } = useTransactions();
 
   const summary = useMemo(() => {
     const now = new Date();
@@ -39,7 +34,7 @@ export function DashboardSummary() {
     return { balance, monthlyExpense };
   }, [transactions, getLatestBalance]);
 
-  if (!isClient) {
+  if (isLoading) {
     return (
         <div className="grid gap-4 md:grid-cols-2">
             <Card>

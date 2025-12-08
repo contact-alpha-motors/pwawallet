@@ -51,7 +51,7 @@ interface TransactionFormProps {
 }
 
 export function TransactionForm({ onSuccess }: TransactionFormProps) {
-  const { addTransaction } = useTransactions();
+  const { addTransaction, isOffline } = useTransactions();
   const { categories } = useCategories();
 
   const form = useForm<TransactionFormValues>({
@@ -221,7 +221,9 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full">Ajouter la transaction</Button>
+        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+          {form.formState.isSubmitting ? 'Ajout...' : isOffline ? 'Ajouter hors ligne' : 'Ajouter la transaction'}
+        </Button>
       </form>
     </Form>
   );

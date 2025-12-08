@@ -4,6 +4,8 @@ import { TransactionsProvider } from '@/providers/transactions-provider';
 import { Toaster } from '@/components/ui/toaster';
 import { DayPickerConfig } from '@/components/app/day-picker-config';
 import { CategoriesProvider } from '@/providers/categories-provider';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { AuthProvider } from '@/providers/auth-provider';
 
 export const metadata: Metadata = {
   title: 'MonPortefeuille PWA',
@@ -29,13 +31,17 @@ export default function RootLayout({
         <link rel='apple-touch-icon' href='/apple-icon-180.png' />
       </head>
       <body className="font-body antialiased">
-        <DayPickerConfig />
-        <CategoriesProvider>
-          <TransactionsProvider>
-            {children}
-          </TransactionsProvider>
-        </CategoriesProvider>
-        <Toaster />
+        <FirebaseClientProvider>
+          <AuthProvider>
+            <DayPickerConfig />
+            <CategoriesProvider>
+              <TransactionsProvider>
+                {children}
+              </TransactionsProvider>
+            </CategoriesProvider>
+            <Toaster />
+          </AuthProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );
