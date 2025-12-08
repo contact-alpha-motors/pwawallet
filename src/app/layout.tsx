@@ -1,6 +1,5 @@
 "use client";
 
-import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { TransactionsProvider } from '@/providers/transactions-provider';
 import { Toaster } from '@/components/ui/toaster';
@@ -18,10 +17,12 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
+        <link rel="manifest" href="/manifest.json" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
         <link rel='apple-touch-icon' href='/apple-icon-180.png' />
+        <meta name="theme-color" content="#90e0b6" />
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
@@ -39,7 +40,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-// NOTE: We are intentionally not re-adding Metadata and Viewport exports here
-// because they can only be defined in Server Components, and we've converted
-// this file to a Client Component for the debugger. This is a temporary change.
