@@ -18,7 +18,7 @@ import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 
 export function SiteHeader() {
-  const { auth } = useAuth();
+  const auth = useAuth();
   const { user } = useUser();
   const router = useRouter();
 
