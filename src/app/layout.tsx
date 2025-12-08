@@ -1,7 +1,6 @@
-"use client"; // This component needs to be a client component for useEffect
+"use client";
 
 import type { Metadata, Viewport } from 'next';
-import { useEffect } from 'react';
 import './globals.css';
 import { TransactionsProvider } from '@/providers/transactions-provider';
 import { Toaster } from '@/components/ui/toaster';
@@ -9,33 +8,6 @@ import { DayPickerConfig } from '@/components/app/day-picker-config';
 import { CategoriesProvider } from '@/providers/categories-provider';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { AuthProvider } from '@/providers/auth-provider';
-
-// This is our new debug component
-const ClickDebugger = () => {
-  useEffect(() => {
-    const handleClick = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      console.log(
-        `[Click Debugger] Clicked on: <${target.tagName.toLowerCase()}>`,
-        {
-          id: target.id || 'no id',
-          className: target.className || 'no class',
-          element: target,
-        }
-      );
-    };
-
-    console.log('[Click Debugger] Attached global click listener.');
-    window.addEventListener('click', handleClick, true); // Use capture phase to get all clicks
-
-    return () => {
-      console.log('[Click Debugger] Removed global click listener.');
-      window.removeEventListener('click', handleClick, true);
-    };
-  }, []);
-
-  return null; // This component doesn't render anything visible
-};
 
 
 export default function RootLayout({
@@ -52,7 +24,6 @@ export default function RootLayout({
         <link rel='apple-touch-icon' href='/apple-icon-180.png' />
       </head>
       <body className="font-body antialiased">
-        <ClickDebugger />
         <FirebaseClientProvider>
           <AuthProvider>
             <DayPickerConfig />
