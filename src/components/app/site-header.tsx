@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Settings, Wallet, FileDown, FolderKanban, Trash2, Target } from "lucide-react";
+import { Settings, Wallet, FileDown, FolderKanban, Trash2, Target, LogOut } from "lucide-react";
 import { ResetDataDialog } from './reset-data-dialog';
 import { useTransactions } from '@/providers/transactions-provider';
 import { format } from 'date-fns';
@@ -13,8 +13,10 @@ import { ManageCategoriesDialog } from './manage-categories-dialog';
 import { SetBudgetDialog } from './set-budget-dialog';
 import { Dialog, DialogTrigger } from '../ui/dialog';
 import { AlertDialog, AlertDialogTrigger } from '../ui/alert-dialog';
+import { useAuth } from '@/firebase';
 
 export function SiteHeader() {
+  const { auth } = useAuth();
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isCategoriesDialogOpen, setIsCategoriesDialogOpen] = useState(false);
   const [isBudgetDialogOpen, setIsBudgetDialogOpen] = useState(false);
@@ -37,6 +39,10 @@ export function SiteHeader() {
     const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
     saveAs(data, `transactions-${new Date().toISOString().split('T')[0]}.xlsx`);
   };
+  
+  const handleLogout = () => {
+    auth.signOut();
+  }
 
 
   return (
@@ -81,10 +87,17 @@ export function SiteHeader() {
                   Exporter vers Excel
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+
+                <DropdownMenuItem onSelect={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Se déconnecter
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
                 
                 <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
                   <AlertDialogTrigger asChild>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive">
                       <Trash2 className="mr-2 h-4 w-4" />
                       Réinitialiser les données
                     </DropdownMenuItem>

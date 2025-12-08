@@ -1,23 +1,22 @@
 "use client";
 
-import { useAuth, useFirebase, useUser } from "@/firebase";
-import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login";
+import { useFirebase, useUser } from "@/firebase";
 import { ReactNode, useEffect, useState } from "react";
-import { doc, setDoc, serverTimestamp, onSnapshot, getDoc } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 interface AuthProviderProps {
     children: ReactNode;
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-    const { auth, firestore } = useFirebase();
-    const { user, isUserLoading } = useUser();
-    const [isOnline, setIsOnline] = useState<boolean | undefined>(undefined);
+    const { firestore } = useFirebase();
+    const { user } = useUser();
+    const [isOnline, setIsOnline] = useState<boolean | undefined>(
+        typeof window !== 'undefined' ? navigator.onLine : undefined
+    );
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            setIsOnline(navigator.onLine);
-
             const handleOnline = () => setIsOnline(true);
             const handleOffline = () => setIsOnline(false);
 
@@ -32,40 +31,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }, []);
 
     useEffect(() => {
-        if (!isUserLoading && !user) {
-            initiateAnonymousSignIn(auth);
-        }
-    }, [isUserLoading, user, auth]);
-
-    useEffect(() => {
         if (!user || !firestore || typeof isOnline === 'undefined') return;
 
         const userStatusRef = doc(firestore, 'presence', user.uid);
 
         const updateStatus = (online: boolean) => {
-            if (online) {
-                setDoc(userStatusRef, {
-                    isOnline: true,
-                    lastActive: serverTimestamp(),
-                }, { merge: true });
-            } else {
-                // Firestore's onDisconnect is not available in the client SDK.
-                // We just update the status when the app is closed or offline.
-                setDoc(userStatusRef, {
-                    isOnline: false,
-                    lastActive: serverTimestamp(),
-                }, { merge: true });
-            }
+            const status = online ? {
+                isOnline: true,
+                lastActive: serverTimestamp(),
+            } : {
+                isOnline: false,
+                lastActive: serverTimestamp(),
+            };
+            setDoc(userStatusRef, status, { merge: true });
         };
 
         updateStatus(isOnline);
-
-        // When the user closes the tab, we'll mark them as offline
+        
+        // This is not fully reliable as it's not guaranteed to run.
+        // A better solution would use server-side functions (e.g. Cloud Functions)
+        // with real-time database to manage presence, but for a client-only
+        // solution, this is a reasonable approach.
         const handleBeforeUnload = () => {
+             // Using navigator.sendBeacon would be more reliable here but requires more setup
              setDoc(userStatusRef, { isOnline: false, lastActive: serverTimestamp() }, { merge: true });
         }
         window.addEventListener('beforeunload', handleBeforeUnload)
-
 
         return () => {
              setDoc(userStatusRef, { isOnline: false, lastActive: serverTimestamp() }, { merge: true });
