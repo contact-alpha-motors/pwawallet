@@ -69,11 +69,11 @@ export function SiteHeader() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={() => setIsBudgetDialogOpen(true)}>
+                <DropdownMenuItem onClick={() => setIsBudgetDialogOpen(true)}>
                   <Target className="mr-2 h-4 w-4" />
                   Définir le budget
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={() => setIsCategoriesDialogOpen(true)}>
+                <DropdownMenuItem onClick={() => setIsCategoriesDialogOpen(true)}>
                   <FolderKanban className="mr-2 h-4 w-4" />
                   Gérer les catégories
                 </DropdownMenuItem>
@@ -82,7 +82,7 @@ export function SiteHeader() {
                   Exporter vers Excel
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={() => setIsResetDialogOpen(true)} className="text-destructive">
+                <DropdownMenuItem onClick={() => setIsResetDialogOpen(true)} className="text-destructive">
                   Réinitialiser les données
                 </DropdownMenuItem>
               </DropdownMenuContent>
