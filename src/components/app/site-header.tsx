@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Settings, Wallet, FileDown, FolderKanban, Trash2, LogOut, Briefcase } from "lucide-react";
+import { Settings, Wallet, FileDown, FolderKanban, Trash2, LogOut, Briefcase, Table } from "lucide-react";
 import { ResetDataDialog } from './reset-data-dialog';
 import { useTransactions } from '@/providers/transactions-provider';
 import { format } from 'date-fns';
@@ -57,7 +57,7 @@ export function SiteHeader() {
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center max-w-4xl">
+        <div className="container flex h-14 items-center max-w-6xl">
           <Link href="/" className="mr-4 flex items-center">
             <Wallet className="h-6 w-6 mr-2 text-primary" />
             <span className="font-bold">MonPortefeuille</span>
@@ -93,9 +93,13 @@ export function SiteHeader() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={() => router.push('/budgets')}>
+                <DropdownMenuItem onSelect={() => router.push('/')}>
                     <Briefcase className="mr-2 h-4 w-4" />
                     Gérer les budgets
+                </DropdownMenuItem>
+                 <DropdownMenuItem onSelect={() => router.push('/transactions')}>
+                    <Table className="mr-2 h-4 w-4" />
+                    Toutes les transactions
                 </DropdownMenuItem>
 
                 <Dialog open={isCategoriesDialogOpen} onOpenChange={setIsCategoriesDialogOpen}>

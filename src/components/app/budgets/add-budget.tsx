@@ -23,7 +23,7 @@ export function AddBudget() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <Button
-            className="fixed bottom-4 right-4 h-16 w-16 rounded-full shadow-lg"
+            className="fixed bottom-4 right-4 h-16 w-16 rounded-full shadow-lg z-20"
             size="icon"
             aria-label="Ajouter un budget"
           >
@@ -48,7 +48,7 @@ export function AddBudget() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg"
+          className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg z-20"
           size="icon"
           aria-label="Ajouter un budget"
         >
