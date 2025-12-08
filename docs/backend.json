@@ -43,6 +43,10 @@
           "type": "string",
           "description": "The date of the transaction.",
           "format": "date-time"
+        },
+        "budgetId": {
+            "type": "string",
+            "description": "The ID of the budget this transaction belongs to."
         }
       },
       "required": [
@@ -53,6 +57,27 @@
         "type",
         "date"
       ]
+    },
+    "Budget": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Budget",
+      "type": "object",
+      "description": "Represents a budget with a name and an allocated amount.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the budget."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the budget (e.g., 'Vacances d'été')."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The total amount allocated to this budget."
+        }
+      },
+      "required": ["id", "name", "amount"]
     }
   },
   "auth": {
@@ -81,6 +106,26 @@
               "description": "The unique identifier for the transaction."
             }
           ]
+        }
+      },
+      {
+        "path": "/users/{userId}/budgets/{budgetId}",
+        "definition": {
+            "entityName": "Budget",
+            "schema": {
+                "$ref": "#/backend/entities/Budget"
+            },
+            "description": "Stores budget data for a specific user.",
+            "params": [
+                {
+                    "name": "userId",
+                    "description": "The unique identifier for the user."
+                },
+                {
+                    "name": "budgetId",
+                    "description": "The unique identifier for the budget."
+                }
+            ]
         }
       },
       {

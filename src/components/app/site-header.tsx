@@ -5,17 +5,16 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Settings, Wallet, FileDown, FolderKanban, Trash2, Target, LogOut, User as UserIcon } from "lucide-react";
+import { Settings, Wallet, FileDown, FolderKanban, Trash2, Target, LogOut, Briefcase } from "lucide-react";
 import { ResetDataDialog } from './reset-data-dialog';
 import { useTransactions } from '@/providers/transactions-provider';
 import { format } from 'date-fns';
 import { ManageCategoriesDialog } from './manage-categories-dialog';
-import { SetBudgetDialog } from './set-budget-dialog';
-import { Dialog, DialogTrigger } from '../ui/dialog';
-import { AlertDialog, AlertDialogTrigger } from '../ui/alert-dialog';
 import { useAuth, useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback } from '../ui/avatar';
+import { AlertDialog, AlertDialogTrigger } from '../ui/alert-dialog';
+import { Dialog, DialogTrigger } from '../ui/dialog';
 
 export function SiteHeader() {
   const auth = useAuth();
@@ -24,7 +23,6 @@ export function SiteHeader() {
 
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isCategoriesDialogOpen, setIsCategoriesDialogOpen] = useState(false);
-  const [isBudgetDialogOpen, setIsBudgetDialogOpen] = useState(false);
   const { transactions } = useTransactions();
 
   const handleExport = () => {
@@ -94,15 +92,10 @@ export function SiteHeader() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <Dialog open={isBudgetDialogOpen} onOpenChange={setIsBudgetDialogOpen}>
-                  <DialogTrigger asChild>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      <Target className="mr-2 h-4 w-4" />
-                      Définir le budget
-                    </DropdownMenuItem>
-                  </DialogTrigger>
-                  <SetBudgetDialog open={isBudgetDialogOpen} onOpenChange={setIsBudgetDialogOpen} />
-                </Dialog>
+                <DropdownMenuItem onSelect={() => router.push('/budgets')}>
+                    <Briefcase className="mr-2 h-4 w-4" />
+                    Gérer les budgets
+                </DropdownMenuItem>
 
                 <Dialog open={isCategoriesDialogOpen} onOpenChange={setIsCategoriesDialogOpen}>
                    <DialogTrigger asChild>

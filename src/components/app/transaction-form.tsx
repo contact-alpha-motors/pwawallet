@@ -42,6 +42,7 @@ const formSchema = z.object({
   domain: z.string().optional(),
   type: z.enum(["income", "expense"]),
   date: z.date(),
+  budgetId: z.string().optional(),
 }).refine(data => {
     if (data.type === 'expense') {
         return !!data.beneficiary && data.beneficiary.length >= 2;
@@ -75,7 +76,7 @@ interface TransactionFormProps {
 }
 
 export function TransactionForm({ onSuccess }: TransactionFormProps) {
-  const { addTransaction, isOffline } = useTransactions();
+  const { addTransaction, isOffline, budgets } = useTransactions();
   const { categories } = useCategories();
 
   const form = useForm<TransactionFormValues>({
@@ -88,6 +89,7 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
       date: new Date(),
       category: "",
       domain: "",
+      budgetId: "",
     },
   });
 
@@ -105,6 +107,7 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
       beneficiary: values.beneficiary || "",
       category: values.category || "",
       domain: values.domain || "",
+      budgetId: values.budgetId || undefined,
     });
     form.reset();
     onSuccess?.();
@@ -134,6 +137,30 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
             </FormItem>
           )}
         />
+        {isExpense && (
+            <FormField
+              control={form.control}
+              name="budgetId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Budget</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Lier à un budget (optionnel)" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {budgets.map(b => (
+                        <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+        )}
         <FormField
           control={form.control}
           name="amount"

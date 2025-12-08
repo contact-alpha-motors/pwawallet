@@ -1,9 +1,9 @@
 "use client";
 
 import { createContext, useContext, ReactNode, useMemo, useCallback, useState, useEffect } from 'react';
-import type { Transaction, TransactionFirestore } from '@/lib/types';
+import type { Transaction, TransactionFirestore, Budget } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { useCollection, useFirebase, useUser, useMemoFirebase, useDoc } from '@/firebase';
+import { useCollection, useFirebase, useUser, useMemoFirebase } from '@/firebase';
 import { collection, doc, writeBatch, setDoc } from 'firebase/firestore';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -11,15 +11,16 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 interface TransactionsContextType {
   transactions: Transaction[];
-  addTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'balance'> & { date: Date }) => void;
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'balance' | 'budgetId'> & { date: Date, budgetId?: string }) => void;
   deleteTransaction: (id: string) => void;
   clearTransactions: () => void;
   getLatestBalance: () => number;
   isOffline: boolean;
   isLoading: boolean;
-  budget: number;
-  budgetLoading: boolean;
-  setBudget: (budget: number) => void;
+  budgets: Budget[];
+  budgetsLoading: boolean;
+  addBudget: (budget: Omit<Budget, 'id'>) => void;
+  deleteBudget: (id: string) => void;
 }
 
 const TransactionsContext = createContext<TransactionsContextType | undefined>(undefined);
@@ -35,17 +36,17 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
     },
     [user, firestore]
   );
-  const { data: firestoreTransactions, isLoading } = useCollection<TransactionFirestore>(transactionsQuery);
+  const { data: firestoreTransactions, isLoading: transactionsLoading } = useCollection<TransactionFirestore>(transactionsQuery);
 
-  const budgetDocRef = useMemoFirebase(
+  const budgetsQuery = useMemoFirebase(
     () => {
         if (!user || !firestore) return null;
-        return doc(firestore, 'users', user.uid);
+        return collection(firestore, 'users', user.uid, 'budgets');
     },
     [user, firestore]
   );
-  const { data: userData, isLoading: budgetLoading } = useDoc<{budget: number}>(budgetDocRef);
-  const budget = useMemo(() => userData?.budget || 0, [userData]);
+  const { data: budgets, isLoading: budgetsLoading } = useCollection<Budget>(budgetsQuery);
+
 
   const [isOffline, setIsOffline] = useState(false);
   const { toast } = useToast();
@@ -166,21 +167,38 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
 
   }, [firestore, user, firestoreTransactions, toast]);
 
-  const setBudget = useCallback((newBudget: number) => {
-    if (!budgetDocRef) {
+  const addBudget = useCallback((budget: Omit<Budget, 'id'>) => {
+    if (!firestore || !user) {
         toast({
-            variant: 'destructive',
+            variant: "destructive",
             title: "Erreur",
-            description: "Impossible de définir le budget. Utilisateur non connecté."
+            description: "Impossible d'ajouter le budget. Utilisateur non connecté."
         });
         return;
     }
-    setDocumentNonBlocking(budgetDocRef, { budget: newBudget }, { merge: true });
+    const newBudgetId = doc(collection(firestore, 'pids')).id;
+    const budgetData = { ...budget, id: newBudgetId };
+    const docRef = doc(firestore, 'users', user.uid, 'budgets', newBudgetId);
+    setDocumentNonBlocking(docRef, budgetData, {});
     toast({
-        title: "Budget mis à jour",
-        description: `Votre nouveau budget mensuel est de ${newBudget}.`
-    })
-  }, [budgetDocRef, toast]);
+        title: "Budget ajouté",
+        description: `Le budget "${budget.name}" a été créé.`
+    });
+  }, [firestore, user, toast]);
+
+  const deleteBudget = useCallback((id: string) => {
+    if (!firestore || !user) {
+        toast({
+            variant: "destructive",
+            title: "Erreur",
+            description: "Impossible de supprimer le budget. Utilisateur non connecté."
+        });
+        return;
+    }
+    const docRef = doc(firestore, 'users', user.uid, 'budgets', id);
+    deleteDocumentNonBlocking(docRef);
+    toast({ title: "Budget supprimé" });
+  }, [firestore, user, toast]);
 
 
   const value = useMemo(() => ({
@@ -190,11 +208,12 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
     clearTransactions,
     getLatestBalance,
     isOffline,
-    isLoading: isLoading || budgetLoading,
-    budget,
-    budgetLoading,
-    setBudget
-  }), [transactions, addTransaction, deleteTransaction, clearTransactions, getLatestBalance, isOffline, isLoading, budget, budgetLoading, setBudget]);
+    isLoading: transactionsLoading || budgetsLoading,
+    budgets: budgets || [],
+    budgetsLoading,
+    addBudget,
+    deleteBudget,
+  }), [transactions, addTransaction, deleteTransaction, clearTransactions, getLatestBalance, isOffline, transactionsLoading, budgets, budgetsLoading, addBudget, deleteBudget]);
 
   return (
     <TransactionsContext.Provider value={value}>

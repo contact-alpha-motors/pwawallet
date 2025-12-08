@@ -9,13 +9,15 @@
  * - /users/{userId}/transactions/{transactionId}: All financial transactions for
  *   a given user are stored in a subcollection under their unique user ID. This
  *   path-based scoping is the primary mechanism for ensuring data privacy.
+ * - /users/{userId}/budgets/{budgetId}: Stores budget information for a user.
  * - /presence/{userId}: A top-level collection tracks the online status of
  *   users. This is separated from the user's private data to allow for more
  *   permissive read access without exposing sensitive information.
  *
  * Key Security Decisions:
- * - Strict Ownership: A user can only read or write transaction data within their
- *   own data tree (/users/{userId}/**). Access to other users' data is denied.
+ * - Strict Ownership: A user can only read or write transaction and budget data
+ *   within their own data tree (/users/{userId}/**). Access to other users' data
+ *   is denied.
  * - Public Presence, Private Writes: Any authenticated user can read the presence
  *   status of any other user to see who is online. However, a user can only
  *   write to their own presence document.
@@ -23,7 +25,7 @@
  *   /users collection, protecting user privacy.
  *
  * Denormalization for Authorization:
- * This ruleset relies on path-based security. By nesting transactions under
+ * This ruleset relies on path-based security. By nesting transactions and budgets under
  * `/users/{userId}`, the `userId` from the path is used to authorize access.
  * This is highly performant as it avoids extra document reads (`get()` calls)
  * to check for an ownership field within the document itself.
@@ -82,6 +84,19 @@ service cloud.firestore {
        * @principle   Enforces strict document ownership based on the user's path. All operations are restricted to the document owner.
        */
       match /transactions/{transactionId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isExistingOwner(userId);
+        allow delete: if isExistingOwner(userId);
+      }
+      
+      /**
+       * @description Secures a user's budgets.
+       * @path        /users/{userId}/budgets/{budgetId}
+       * @principle   Enforces strict document ownership based on the user's path.
+       */
+      match /budgets/{budgetId} {
         allow get: if isOwner(userId);
         allow list: if isOwner(userId);
         allow create: if isOwner(userId);

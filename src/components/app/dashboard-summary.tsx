@@ -1,47 +1,47 @@
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTransactions } from '@/providers/transactions-provider';
 import { ArrowDownLeft, PiggyBank, Target } from 'lucide-react';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { Skeleton } from '../ui/skeleton';
 import { Progress } from '../ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import type { Budget } from '@/lib/types';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(amount);
 };
 
 export function DashboardSummary() {
-  const { transactions, getLatestBalance, isLoading, budget, budgetLoading } = useTransactions();
+  const { transactions, getLatestBalance, isLoading, budgets, budgetsLoading } = useTransactions();
+  const [selectedBudgetId, setSelectedBudgetId] = useState<string | null>(null);
+
+  const selectedBudget = useMemo(() => {
+    if (!selectedBudgetId) return null;
+    return budgets.find(b => b.id === selectedBudgetId) || null;
+  }, [selectedBudgetId, budgets]);
 
   const summary = useMemo(() => {
-    const now = new Date();
-    const currentMonth = format(now, 'yyyy-MM');
-    
-    let monthlyExpense = 0;
-
-    for (const t of transactions) {
-      if (t.type === 'expense') {
-        const transactionDate = new Date(t.date);
-        if (format(transactionDate, 'yyyy-MM') === currentMonth) {
-            monthlyExpense += t.amount;
-        }
-      }
-    }
-    
     const balance = getLatestBalance();
+    
+    if (!selectedBudget) {
+      return { balance, expense: 0, budgetAmount: 0 };
+    }
 
-    return { balance, monthlyExpense };
-  }, [transactions, getLatestBalance]);
+    const budgetExpenses = transactions
+      .filter(t => t.budgetId === selectedBudget.id && t.type === 'expense')
+      .reduce((acc, t) => acc + t.amount, 0);
+
+    return { balance, expense: budgetExpenses, budgetAmount: selectedBudget.amount };
+  }, [transactions, getLatestBalance, selectedBudget]);
 
   const budgetProgress = useMemo(() => {
-    if (!budget || budget === 0) return 0;
-    return (summary.monthlyExpense / budget) * 100;
-  }, [summary.monthlyExpense, budget]);
+    if (!summary.budgetAmount) return 0;
+    return (summary.expense / summary.budgetAmount) * 100;
+  }, [summary.expense, summary.budgetAmount]);
 
-  if (isLoading || budgetLoading) {
+  if (isLoading || budgetsLoading) {
     return (
         <div className="grid gap-4 md:grid-cols-2">
             <Card>
@@ -56,10 +56,11 @@ export function DashboardSummary() {
             </Card>
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Budget Mensuel</CardTitle>
+                    <CardTitle className="text-sm font-medium">Suivi du Budget</CardTitle>
                     <Target className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
+                    <Skeleton className="h-8 w-full mb-2" />
                     <Skeleton className="h-8 w-3/4" />
                     <Skeleton className="h-4 w-1/2 mt-1" />
                     <Skeleton className="h-2 w-full mt-2" />
@@ -83,20 +84,31 @@ export function DashboardSummary() {
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Budget Mensuel</CardTitle>
+          <CardTitle className="text-sm font-medium">Suivi du Budget</CardTitle>
           <Target className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-red-500">{formatCurrency(summary.monthlyExpense)}</div>
-          {budget > 0 ? (
-            <>
+          <Select onValueChange={setSelectedBudgetId} defaultValue={selectedBudgetId || undefined}>
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner un budget" />
+            </SelectTrigger>
+            <SelectContent>
+              {budgets.map(b => (
+                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {selectedBudget ? (
+            <div className="mt-4">
+              <div className="text-2xl font-bold text-red-500">{formatCurrency(summary.expense)}</div>
               <p className="text-xs text-muted-foreground">
-                sur un budget de {formatCurrency(budget)} pour {format(new Date(), 'MMMM', { locale: fr })}
+                dépensé sur un budget de {formatCurrency(summary.budgetAmount)}
               </p>
               <Progress value={budgetProgress} className="mt-2 h-2" />
-            </>
+            </div>
           ) : (
-             <p className="text-xs text-muted-foreground">Aucun budget défini pour ce mois-ci.</p>
+             <p className="text-sm text-muted-foreground mt-4">Veuillez sélectionner un budget pour voir le suivi.</p>
           )}
         </CardContent>
       </Card>

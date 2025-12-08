@@ -9,6 +9,12 @@ export const defaultDomains: readonly Domain[] = [
   'Autre',
 ];
 
+export interface Budget {
+    id: string;
+    name: string;
+    amount: number;
+}
+
 // This represents the data structure in Firestore
 export interface TransactionFirestore {
   id: string;
@@ -19,6 +25,7 @@ export interface TransactionFirestore {
   type: TransactionType;
   beneficiary: string;
   domain: string;
+  budgetId?: string;
 }
 
 // This represents the data structure in the client, with the calculated balance
