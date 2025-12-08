@@ -11,6 +11,8 @@ import { useTransactions } from '@/providers/transactions-provider';
 import { format } from 'date-fns';
 import { ManageCategoriesDialog } from './manage-categories-dialog';
 import { SetBudgetDialog } from './set-budget-dialog';
+import { Dialog, DialogTrigger } from '../ui/dialog';
+import { AlertDialog, AlertDialogTrigger } from '../ui/alert-dialog';
 
 export function SiteHeader() {
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
@@ -32,7 +34,7 @@ export function SiteHeader() {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Transactions');
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-T' });
+    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
     saveAs(data, `transactions-${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
@@ -54,31 +56,47 @@ export function SiteHeader() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={(e) => {e.preventDefault(); setIsBudgetDialogOpen(true);}}>
-                    <Target className="mr-2 h-4 w-4" />
-                    Définir le budget
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={(e) => {e.preventDefault(); setIsCategoriesDialogOpen(true);}}>
-                  <FolderKanban className="mr-2 h-4 w-4" />
-                  Gérer les catégories
-                </DropdownMenuItem>
+                <Dialog open={isBudgetDialogOpen} onOpenChange={setIsBudgetDialogOpen}>
+                  <DialogTrigger asChild>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      <Target className="mr-2 h-4 w-4" />
+                      Définir le budget
+                    </DropdownMenuItem>
+                  </DialogTrigger>
+                  <SetBudgetDialog open={isBudgetDialogOpen} onOpenChange={setIsBudgetDialogOpen} />
+                </Dialog>
+
+                <Dialog open={isCategoriesDialogOpen} onOpenChange={setIsCategoriesDialogOpen}>
+                   <DialogTrigger asChild>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <FolderKanban className="mr-2 h-4 w-4" />
+                        Gérer les catégories
+                      </DropdownMenuItem>
+                   </DialogTrigger>
+                   <ManageCategoriesDialog open={isCategoriesDialogOpen} onOpenChange={setIsCategoriesDialogOpen} />
+                </Dialog>
+
                 <DropdownMenuItem onClick={handleExport}>
                   <FileDown className="mr-2 h-4 w-4" />
                   Exporter vers Excel
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={(e) => {e.preventDefault(); setIsResetDialogOpen(true);}} className="text-destructive">
-                   <Trash2 className="mr-2 h-4 w-4" />
-                  Réinitialiser les données
-                </DropdownMenuItem>
+                
+                <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+                  <AlertDialogTrigger asChild>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Réinitialiser les données
+                    </DropdownMenuItem>
+                  </AlertDialogTrigger>
+                  <ResetDataDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen} />
+                </AlertDialog>
+
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
       </header>
-      <ResetDataDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen} />
-      <ManageCategoriesDialog open={isCategoriesDialogOpen} onOpenChange={setIsCategoriesDialogOpen} />
-      <SetBudgetDialog open={isBudgetDialogOpen} onOpenChange={setIsBudgetDialogOpen} />
     </>
   );
 }
