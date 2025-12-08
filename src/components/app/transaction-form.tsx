@@ -258,7 +258,7 @@ export function TransactionForm({ onSuccess, budgetId: defaultBudgetId }: Transa
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Date</FormLabel>
-              <Popover>
+              <Popover modal={false}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
