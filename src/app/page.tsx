@@ -6,18 +6,9 @@ import { TransactionHistory } from '@/components/app/transaction-history';
 import { AddTransaction } from '@/components/app/add-transaction';
 import { useUser } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const { user, isUserLoading } = useUser();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/login');
-    }
-  }, [isUserLoading, user, router]);
 
   if (isUserLoading || !user) {
     return (

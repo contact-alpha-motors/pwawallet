@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
 import {
   initiateEmailSignIn,
   initiateEmailSignUp,
@@ -31,8 +31,7 @@ import { useRouter } from 'next/navigation';
 import { FirebaseError } from 'firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { Wallet } from 'lucide-react';
-import { Auth, getAuth, onAuthStateChanged } from 'firebase/auth';
-import { useEffect } from 'react';
+import { linkWithCredential, EmailAuthProvider } from 'firebase/auth';
 
 
 const signUpSchema = z
@@ -60,9 +59,11 @@ function getFirebaseAuthError(error: FirebaseError): string {
         case 'auth/email-already-in-use':
             return 'Cette adresse e-mail est déjà utilisée par un autre compte.';
         case 'auth/invalid-email':
-            return 'L\'adresse e-mail n\'est pas valide.';
+            return "L'adresse e-mail n'est pas valide.";
         case 'auth/weak-password':
             return 'Le mot de passe est trop faible. Il doit contenir au moins 6 caractères.';
+        case 'auth/credential-already-in-use':
+            return 'Ce compte existe déjà. Veuillez vous connecter.';
         default:
             return 'Une erreur est survenue. Veuillez réessayer.';
     }
@@ -71,17 +72,16 @@ function getFirebaseAuthError(error: FirebaseError): string {
 export default function LoginPage() {
   const router = useRouter();
   const auth = useAuth();
+  const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        router.push('/');
-      }
-    });
-    return () => unsubscribe();
-  }, [auth, router]);
+    // Redirect if user is logged in and not anonymous
+    if (!isUserLoading && user && !user.isAnonymous) {
+      router.push('/');
+    }
+  }, [user, isUserLoading, router]);
 
   const signUpForm = useForm<z.infer<typeof signUpSchema>>({
     resolver: zodResolver(signUpSchema),
@@ -94,28 +94,49 @@ export default function LoginPage() {
   });
 
   const handleSignUp = async (values: z.infer<typeof signUpSchema>) => {
+    if (!auth.currentUser) {
+        throw new Error("Aucun utilisateur n'est connecté pour effectuer la liaison.");
+    }
+    const credential = EmailAuthProvider.credential(values.email, values.password);
     try {
-        await initiateEmailSignUp(auth, values.email, values.password);
-        // onAuthStateChanged will handle the redirect
-    } catch (error) {
+        await linkWithCredential(auth.currentUser, credential);
+        router.push('/');
+        toast({
+          title: "Compte créé et lié !",
+          description: "Votre compte anonyme a été converti en compte permanent."
+        });
+    } catch(error) {
         if (error instanceof FirebaseError) {
+          if (error.code === 'auth/credential-already-in-use') {
+             // This case is tricky. It means the email is already registered.
+             // The user should sign in instead and we'd need to handle data migration.
+             // For now, we'll just show an error.
+             setAuthError("Cette adresse e-mail est déjà utilisée. Essayez de vous connecter.");
+          } else {
             setAuthError(getFirebaseAuthError(error));
+          }
         } else {
-            setAuthError('Une erreur inattendue est survenue.');
+           setAuthError('Une erreur inattendue est survenue.');
         }
+        throw error; // re-throw to be caught by onFormSubmit
     }
   };
 
   const handleLogin = async (values: z.infer<typeof loginSchema>) => {
     try {
         await initiateEmailSignIn(auth, values.email, values.password);
-         // onAuthStateChanged will handle the redirect
+        router.push('/');
+         toast({
+          title: "Connexion réussie!",
+          description: "Bon retour parmi nous."
+        });
     } catch (error) {
         if (error instanceof FirebaseError) {
             setAuthError(getFirebaseAuthError(error));
         } else {
             setAuthError('Une erreur inattendue est survenue.');
         }
+        throw error; // re-throw to be caught by onFormSubmit
     }
   };
   
@@ -127,21 +148,19 @@ export default function LoginPage() {
     try {
       await handler(values);
     } catch (error) {
-      if (error instanceof FirebaseError) {
-        toast({
-          variant: "destructive",
-          title: "Erreur d'authentification",
-          description: getFirebaseAuthError(error),
-        });
-      } else {
-         toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Une erreur inattendue est survenue.",
-        });
-      }
+      // The error is already set in state by handleSignUp/handleLogin
+      // We just need to prevent form submission state from being stuck.
+      console.error(error);
     }
   };
+
+  if (isUserLoading || (user && !user.isAnonymous)) {
+     return (
+       <div className="flex min-h-dvh items-center justify-center bg-background p-4 font-body">
+         <p>Chargement...</p>
+       </div>
+     );
+  }
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background p-4 font-body">
@@ -151,7 +170,7 @@ export default function LoginPage() {
             <h1 className="text-3xl font-bold mt-2">MonPortefeuille</h1>
             <p className="text-muted-foreground">Gérez vos finances personnelles simplement.</p>
         </div>
-        <Tabs defaultValue="login" className="w-full">
+        <Tabs defaultValue="signup" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Se connecter</TabsTrigger>
             <TabsTrigger value="signup">S'inscrire</TabsTrigger>
@@ -213,9 +232,9 @@ export default function LoginPage() {
           <TabsContent value="signup">
             <Card>
               <CardHeader>
-                <CardTitle>Inscription</CardTitle>
+                <CardTitle>Créer un compte</CardTitle>
                 <CardDescription>
-                  Créez un compte pour commencer à suivre vos dépenses.
+                  Sauvegardez vos données en créant un compte permanent.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">

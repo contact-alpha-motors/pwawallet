@@ -3,17 +3,32 @@
 import { useFirebase, useUser } from "@/firebase";
 import { ReactNode, useEffect, useState } from "react";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login";
+import { Auth } from "firebase/auth";
 
 interface AuthProviderProps {
     children: ReactNode;
 }
 
+const handleUserSession = (auth: Auth, isUserLoading: boolean, user: any) => {
+    if (!isUserLoading && !user) {
+        initiateAnonymousSignIn(auth).catch((error) => {
+            console.error("Anonymous sign-in failed", error);
+        });
+    }
+};
+
 export function AuthProvider({ children }: AuthProviderProps) {
-    const { firestore } = useFirebase();
-    const { user } = useUser();
+    const { firestore, auth } = useFirebase();
+    const { user, isUserLoading } = useUser();
     const [isOnline, setIsOnline] = useState<boolean | undefined>(
         typeof window !== 'undefined' ? navigator.onLine : undefined
     );
+
+    useEffect(() => {
+        handleUserSession(auth, isUserLoading, user);
+    }, [auth, isUserLoading, user]);
+    
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -48,12 +63,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         updateStatus(isOnline);
         
-        // This is not fully reliable as it's not guaranteed to run.
-        // A better solution would use server-side functions (e.g. Cloud Functions)
-        // with real-time database to manage presence, but for a client-only
-        // solution, this is a reasonable approach.
         const handleBeforeUnload = () => {
-             // Using navigator.sendBeacon would be more reliable here but requires more setup
              setDoc(userStatusRef, { isOnline: false, lastActive: serverTimestamp() }, { merge: true });
         }
         window.addEventListener('beforeunload', handleBeforeUnload)
