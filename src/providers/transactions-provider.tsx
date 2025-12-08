@@ -3,9 +3,9 @@
 import { createContext, useContext, ReactNode, useMemo, useCallback, useState, useEffect } from 'react';
 import type { Transaction, TransactionFirestore } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { useCollection, useFirebase, useUser, useMemoFirebase } from '@/firebase';
-import { collection, doc, writeBatch } from 'firebase/firestore';
-import { addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useCollection, useFirebase, useUser, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, doc, writeBatch, setDoc } from 'firebase/firestore';
+import { addDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 
@@ -17,6 +17,9 @@ interface TransactionsContextType {
   getLatestBalance: () => number;
   isOffline: boolean;
   isLoading: boolean;
+  budget: number;
+  budgetLoading: boolean;
+  setBudget: (budget: number) => void;
 }
 
 const TransactionsContext = createContext<TransactionsContextType | undefined>(undefined);
@@ -33,6 +36,16 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
     [user, firestore]
   );
   const { data: firestoreTransactions, isLoading } = useCollection<TransactionFirestore>(transactionsQuery);
+
+  const budgetDocRef = useMemoFirebase(
+    () => {
+        if (!user || !firestore) return null;
+        return doc(firestore, 'users', user.uid);
+    },
+    [user, firestore]
+  );
+  const { data: userData, isLoading: budgetLoading } = useDoc<{budget: number}>(budgetDocRef);
+  const budget = useMemo(() => userData?.budget || 0, [userData]);
 
   const [isOffline, setIsOffline] = useState(false);
   const { toast } = useToast();
@@ -61,17 +74,17 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
   const transactions = useMemo(() => {
     if (!firestoreTransactions) return [];
 
-    const sorted = [...firestoreTransactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const sorted = [...firestoreTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
-    const withBalance: Transaction[] = [];
     let runningBalance = 0;
-    
-    const reversed = [...sorted].reverse();
-
-    for(const t of reversed) {
-        runningBalance = t.type === 'income' ? runningBalance + t.amount : runningBalance - t.amount;
-        withBalance.push({ ...t, balance: runningBalance });
-    }
+    const withBalance: Transaction[] = sorted.map(t => {
+      if (t.type === 'income') {
+        runningBalance += t.amount;
+      } else {
+        runningBalance -= t.amount;
+      }
+      return { ...t, balance: runningBalance };
+    });
 
     return withBalance.reverse();
   }, [firestoreTransactions]);
@@ -81,6 +94,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
     if (transactions.length === 0) {
       return 0;
     }
+    // Since we reversed the array, the latest transaction is at index 0
     return transactions[0].balance;
   }, [transactions]);
 
@@ -102,9 +116,6 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
         date: transaction.date.toISOString(),
     };
     
-    const docRef = doc(firestore, 'users', user.uid, 'transactions', newTransactionId);
-    
-    // We are now using the non-blocking update function
     addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'transactions'), transactionData);
 
     toast({
@@ -152,6 +163,23 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
 
   }, [firestore, user, firestoreTransactions, toast]);
 
+  const setBudget = useCallback((newBudget: number) => {
+    if (!budgetDocRef) {
+        toast({
+            variant: 'destructive',
+            title: "Erreur",
+            description: "Impossible de définir le budget. Utilisateur non connecté."
+        });
+        return;
+    }
+    setDocumentNonBlocking(budgetDocRef, { budget: newBudget }, { merge: true });
+    toast({
+        title: "Budget mis à jour",
+        description: `Votre nouveau budget mensuel est de ${newBudget}.`
+    })
+  }, [budgetDocRef, toast]);
+
+
   const value = useMemo(() => ({
     transactions,
     addTransaction,
@@ -159,8 +187,11 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
     clearTransactions,
     getLatestBalance,
     isOffline,
-    isLoading
-  }), [transactions, addTransaction, deleteTransaction, clearTransactions, getLatestBalance, isOffline, isLoading]);
+    isLoading: isLoading || budgetLoading,
+    budget,
+    budgetLoading,
+    setBudget
+  }), [transactions, addTransaction, deleteTransaction, clearTransactions, getLatestBalance, isOffline, isLoading, budget, budgetLoading, setBudget]);
 
   return (
     <TransactionsContext.Provider value={value}>

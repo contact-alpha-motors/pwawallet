@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -36,12 +36,36 @@ import { defaultDomains } from "@/lib/types";
 
 const formSchema = z.object({
   amount: z.coerce.number().positive("Le montant doit être positif"),
-  description: z.string().min(2, "Le motif doit comporter au moins 2 caractères.").optional(),
-  beneficiary: z.string().min(2, "Le bénéficiaire doit comporter au moins 2 caractères."),
-  category: z.string().min(1, "Veuillez sélectionner une catégorie."),
-  domain: z.string().min(1, "Veuillez sélectionner un domaine."),
+  description: z.string().optional(),
+  beneficiary: z.string().optional(),
+  category: z.string().optional(),
+  domain: z.string().optional(),
   type: z.enum(["income", "expense"]),
   date: z.date(),
+}).refine(data => {
+    if (data.type === 'expense') {
+        return !!data.beneficiary && data.beneficiary.length >= 2;
+    }
+    return true;
+}, {
+    message: "Le bénéficiaire doit comporter au moins 2 caractères.",
+    path: ['beneficiary']
+}).refine(data => {
+    if (data.type === 'expense') {
+        return !!data.category && data.category.length >= 1;
+    }
+    return true;
+}, {
+    message: "Veuillez sélectionner une catégorie.",
+    path: ['category']
+}).refine(data => {
+    if (data.type === 'expense') {
+        return !!data.domain && data.domain.length >= 1;
+    }
+    return true;
+}, {
+    message: "Veuillez sélectionner un domaine.",
+    path: ['domain']
 });
 
 type TransactionFormValues = z.infer<typeof formSchema>;
@@ -67,10 +91,20 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
     },
   });
 
+  const transactionType = useWatch({
+    control: form.control,
+    name: 'type'
+  });
+  const isExpense = transactionType === 'expense';
+
+
   function onSubmit(values: TransactionFormValues) {
     addTransaction({
       ...values,
-      description: values.description || ""
+      description: values.description || "",
+      beneficiary: values.beneficiary || "",
+      category: values.category || "",
+      domain: values.domain || "",
     });
     form.reset();
     onSuccess?.();
@@ -118,7 +152,7 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
           name="beneficiary"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Bénéficiaire</FormLabel>
+              <FormLabel>Bénéficiaire {isExpense && <span className="text-destructive">*</span>}</FormLabel>
               <FormControl>
                 <Input placeholder="ex: John Doe" {...field} />
               </FormControl>
@@ -144,7 +178,7 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
           name="category"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Catégorie</FormLabel>
+              <FormLabel>Catégorie {isExpense && <span className="text-destructive">*</span>}</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -166,7 +200,7 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
           name="domain"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Domaine</FormLabel>
+              <FormLabel>Domaine {isExpense && <span className="text-destructive">*</span>}</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>

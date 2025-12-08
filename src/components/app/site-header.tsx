@@ -5,15 +5,17 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Settings, Wallet, FileDown, FolderKanban, Wifi, WifiOff } from "lucide-react";
+import { Settings, Wallet, FileDown, FolderKanban, Wifi, WifiOff, Target } from "lucide-react";
 import { ResetDataDialog } from './reset-data-dialog';
 import { useTransactions } from '@/providers/transactions-provider';
 import { format } from 'date-fns';
 import { ManageCategoriesDialog } from './manage-categories-dialog';
+import { SetBudgetDialog } from './set-budget-dialog';
 
 export function SiteHeader() {
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isCategoriesDialogOpen, setIsCategoriesDialogOpen] = useState(false);
+  const [isBudgetDialogOpen, setIsBudgetDialogOpen] = useState(false);
   const { transactions, isOffline } = useTransactions();
 
   const handleExport = () => {
@@ -67,6 +69,10 @@ export function SiteHeader() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setIsBudgetDialogOpen(true)}>
+                  <Target className="mr-2 h-4 w-4" />
+                  Définir le budget
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setIsCategoriesDialogOpen(true)}>
                   <FolderKanban className="mr-2 h-4 w-4" />
                   Gérer les catégories
@@ -86,6 +92,7 @@ export function SiteHeader() {
       </header>
       <ResetDataDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen} />
       <ManageCategoriesDialog open={isCategoriesDialogOpen} onOpenChange={setIsCategoriesDialogOpen} />
+      <SetBudgetDialog open={isBudgetDialogOpen} onOpenChange={setIsBudgetDialogOpen} />
     </>
   );
 }
