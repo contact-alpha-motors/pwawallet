@@ -1,10 +1,7 @@
 
 "use client";
 
-import { useEffect } from 'react';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -12,55 +9,39 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTransactions } from '@/providers/transactions-provider';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
+import { Label } from '../ui/label';
 
 interface SetBudgetDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const budgetSchema = z.object({
-    budget: z.coerce.number().min(0, "Le budget ne peut pas être négatif."),
-});
-
-type BudgetFormValues = z.infer<typeof budgetSchema>;
-
 export function SetBudgetDialog({ open, onOpenChange }: SetBudgetDialogProps) {
   const { budget, setBudget } = useTransactions();
-  
-  console.log('[SetBudgetDialog] Rendering with open =', open);
-
-  const form = useForm<BudgetFormValues>({
-    resolver: zodResolver(budgetSchema),
-    defaultValues: {
-        budget: budget || 0,
-    }
-  });
+  const [currentBudget, setCurrentBudget] = useState(budget || 0);
 
   useEffect(() => {
     if (open) {
-        console.log('[SetBudgetDialog] Resetting form with budget:', budget);
-        form.reset({ budget: budget || 0 });
+      setCurrentBudget(budget || 0);
     }
-  }, [budget, open, form]);
+  }, [open, budget]);
 
-  const handleSetBudget = (values: BudgetFormValues) => {
-    console.log('[SetBudgetDialog] Form submitted with values:', values);
-    setBudget(values.budget);
-    onOpenChange(false); // Close the dialog on success
-  };
-
-  const handleOpenChange = (isOpen: boolean) => {
-    console.log('[SetBudgetDialog] onOpenChange called with:', isOpen);
-    onOpenChange(isOpen);
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const newBudget = parseFloat(String(currentBudget));
+    if (!isNaN(newBudget) && newBudget >= 0) {
+      setBudget(newBudget);
+      onOpenChange(false); // Close the dialog
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Définir le budget mensuel</DialogTitle>
@@ -68,31 +49,27 @@ export function SetBudgetDialog({ open, onOpenChange }: SetBudgetDialogProps) {
             Entrez votre budget mensuel pour suivre vos dépenses.
           </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSetBudget)} className="space-y-4">
-                <FormField
-                    control={form.control}
-                    name="budget"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Budget Mensuel</FormLabel>
-                            <FormControl>
-                                <Input type="number" placeholder="ex: 500000" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
+        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+            <div className="space-y-2">
+                <Label htmlFor="budget">Budget Mensuel</Label>
+                <Input
+                    id="budget"
+                    type="number"
+                    value={currentBudget}
+                    onChange={(e) => setCurrentBudget(Number(e.target.value))}
+                    placeholder="ex: 500000"
                 />
-              <DialogFooter className="pt-4">
-                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                      Annuler
-                  </Button>
-                  <Button type="submit">Enregistrer</Button>
-              </DialogFooter>
-            </form>
-        </Form>
+            </div>
+            <DialogFooter className="pt-4">
+                <DialogClose asChild>
+                    <Button type="button" variant="outline">
+                        Annuler
+                    </Button>
+                </DialogClose>
+                <Button type="submit">Enregistrer</Button>
+            </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
 }
-

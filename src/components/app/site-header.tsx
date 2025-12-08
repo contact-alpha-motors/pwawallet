@@ -37,11 +37,6 @@ export function SiteHeader() {
     saveAs(data, `transactions-${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
-  const handleBudgetOpenChange = (open: boolean) => {
-    console.log('[SiteHeader] Budget dialog state changed to:', open);
-    setIsBudgetDialogOpen(open);
-  }
-
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -97,7 +92,7 @@ export function SiteHeader() {
       </header>
       <ResetDataDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen} />
       <ManageCategoriesDialog open={isCategoriesDialogOpen} onOpenChange={setIsCategoriesDialogOpen} />
-      <SetBudgetDialog open={isBudgetDialogOpen} onOpenChange={handleBudgetOpenChange} />
+      <SetBudgetDialog open={isBudgetDialogOpen} onOpenChange={setIsBudgetDialogOpen} />
     </>
   );
 }
