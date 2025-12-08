@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Settings, Wallet, FileDown, FolderKanban } from "lucide-react";
+import { Settings, Wallet, FileDown, FolderKanban, Trash2, Target } from "lucide-react";
 import { ResetDataDialog } from './reset-data-dialog';
 import { useTransactions } from '@/providers/transactions-provider';
 import { format } from 'date-fns';
@@ -32,7 +32,7 @@ export function SiteHeader() {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Transactions');
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
+    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-T' });
     saveAs(data, `transactions-${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
@@ -54,10 +54,11 @@ export function SiteHeader() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => alert('Test: Définir le budget')}>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={() => setIsBudgetDialogOpen(true)}>
+                    <Target className="mr-2 h-4 w-4" />
                     Définir le budget
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => alert('Test: Gérer les catégories')}>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={() => setIsCategoriesDialogOpen(true)}>
                   <FolderKanban className="mr-2 h-4 w-4" />
                   Gérer les catégories
                 </DropdownMenuItem>
@@ -66,7 +67,8 @@ export function SiteHeader() {
                   Exporter vers Excel
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => alert('Test: Réinitialiser les données')} className="text-destructive">
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={() => setIsResetDialogOpen(true)} className="text-destructive">
+                   <Trash2 className="mr-2 h-4 w-4" />
                   Réinitialiser les données
                 </DropdownMenuItem>
               </DropdownMenuContent>
