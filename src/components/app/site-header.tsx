@@ -48,7 +48,7 @@ export function SiteHeader() {
             <span className="font-bold">MonPortefeuille</span>
           </div>
           <div className="flex flex-1 items-center justify-end space-x-2">
-            <DropdownMenu>
+             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Settings className="h-5 w-5" />
