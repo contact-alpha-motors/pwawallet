@@ -22,8 +22,13 @@ const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(amount);
 };
 
-export function TransactionHistory() {
-  const { transactions, isLoading } = useTransactions();
+interface TransactionHistoryProps {
+    transactions?: Transaction[];
+}
+
+export function TransactionHistory({ transactions: transactionsProp }: TransactionHistoryProps) {
+  const { transactions: allTransactions, isLoading } = useTransactions();
+  const transactions = transactionsProp || allTransactions;
 
   const groupedTransactions = useMemo(() => {
     return transactions.reduce((acc: GroupedTransactions, transaction) => {
@@ -90,7 +95,7 @@ export function TransactionHistory() {
                         )}
                     </div>
                     <ul className="space-y-4">
-                        {groupedTransactions[date].transactions.map((transaction) => (
+                        {groupedTransactions[date].transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((transaction) => (
                             <motion.li
                                 key={transaction.id}
                                 layout

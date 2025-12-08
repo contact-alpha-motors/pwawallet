@@ -9,7 +9,11 @@ import { Plus } from "lucide-react";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TransactionForm } from './transaction-form';
 
-export function AddTransaction() {
+interface AddTransactionProps {
+  budgetId?: string;
+}
+
+export function AddTransaction({ budgetId }: AddTransactionProps) {
   const [open, setOpen] = useState(false);
   const isMobile = useIsMobile();
 
@@ -17,7 +21,7 @@ export function AddTransaction() {
     setOpen(false);
   }
 
-  const form = <TransactionForm onSuccess={handleSuccess} />;
+  const form = <TransactionForm onSuccess={handleSuccess} budgetId={budgetId} />;
 
   if (isMobile) {
     return (

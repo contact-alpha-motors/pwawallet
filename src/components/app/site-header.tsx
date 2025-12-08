@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Settings, Wallet, FileDown, FolderKanban, Trash2, Target, LogOut, Briefcase } from "lucide-react";
+import { Settings, Wallet, FileDown, FolderKanban, Trash2, LogOut, Briefcase } from "lucide-react";
 import { ResetDataDialog } from './reset-data-dialog';
 import { useTransactions } from '@/providers/transactions-provider';
 import { format } from 'date-fns';
@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { AlertDialog, AlertDialogTrigger } from '../ui/alert-dialog';
 import { Dialog, DialogTrigger } from '../ui/dialog';
+import Link from 'next/link';
 
 export function SiteHeader() {
   const auth = useAuth();
@@ -57,10 +58,10 @@ export function SiteHeader() {
     <>
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center max-w-4xl">
-          <div className="mr-4 flex items-center">
+          <Link href="/" className="mr-4 flex items-center">
             <Wallet className="h-6 w-6 mr-2 text-primary" />
             <span className="font-bold">MonPortefeuille</span>
-          </div>
+          </Link>
           <div className="flex flex-1 items-center justify-end space-x-4">
             {user && user.isAnonymous ? (
                 <Button onClick={() => router.push('/login')}>S'inscrire / Se connecter</Button>

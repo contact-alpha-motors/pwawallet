@@ -73,9 +73,10 @@ type TransactionFormValues = z.infer<typeof formSchema>;
 
 interface TransactionFormProps {
   onSuccess?: () => void;
+  budgetId?: string;
 }
 
-export function TransactionForm({ onSuccess }: TransactionFormProps) {
+export function TransactionForm({ onSuccess, budgetId: defaultBudgetId }: TransactionFormProps) {
   const { addTransaction, isOffline, budgets } = useTransactions();
   const { categories } = useCategories();
 
@@ -89,7 +90,7 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
       date: new Date(),
       category: "",
       domain: "",
-      budgetId: "",
+      budgetId: defaultBudgetId || "",
     },
   });
 
@@ -109,7 +110,14 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
       domain: values.domain || "",
       budgetId: values.budgetId || undefined,
     });
-    form.reset();
+    form.reset({
+      ...form.getValues(), // keep some values like date
+      amount: 0,
+      description: '',
+      beneficiary: '',
+      // keep budgetId if it was passed as default
+      budgetId: defaultBudgetId || ''
+    });
     onSuccess?.();
   }
 
@@ -144,7 +152,7 @@ export function TransactionForm({ onSuccess }: TransactionFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Budget</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!defaultBudgetId}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Lier à un budget (optionnel)" />
