@@ -1,7 +1,10 @@
 
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTransactions } from '@/providers/transactions-provider';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
 import { Label } from '../ui/label';
 
 interface SetBudgetDialogProps {
@@ -21,23 +25,30 @@ interface SetBudgetDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const budgetSchema = z.object({
+    budget: z.coerce.number().min(0, "Le budget doit être un nombre positif."),
+});
+
 export function SetBudgetDialog({ open, onOpenChange }: SetBudgetDialogProps) {
   const { budget, setBudget } = useTransactions();
-  const [currentBudget, setCurrentBudget] = useState(budget || 0);
+
+  const form = useForm<z.infer<typeof budgetSchema>>({
+    resolver: zodResolver(budgetSchema),
+    defaultValues: {
+      budget: budget || 0,
+    },
+  });
 
   useEffect(() => {
     if (open) {
-      setCurrentBudget(budget || 0);
+      form.reset({ budget: budget || 0 });
     }
-  }, [open, budget]);
+  }, [open, budget, form]);
+  
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const newBudget = parseFloat(String(currentBudget));
-    if (!isNaN(newBudget) && newBudget >= 0) {
-      setBudget(newBudget);
-      onOpenChange(false); // Close the dialog
-    }
+  const handleSubmit = (values: z.infer<typeof budgetSchema>) => {
+    setBudget(values.budget);
+    onOpenChange(false); // Close the dialog
   };
 
   return (
@@ -49,26 +60,36 @@ export function SetBudgetDialog({ open, onOpenChange }: SetBudgetDialogProps) {
             Entrez votre budget mensuel pour suivre vos dépenses.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-            <div className="space-y-2">
-                <Label htmlFor="budget">Budget Mensuel</Label>
-                <Input
-                    id="budget"
-                    type="number"
-                    value={currentBudget}
-                    onChange={(e) => setCurrentBudget(Number(e.target.value))}
-                    placeholder="ex: 500000"
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-4">
+                <FormField
+                    control={form.control}
+                    name="budget"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Budget Mensuel</FormLabel>
+                            <FormControl>
+                                <Input
+                                    type="number"
+                                    placeholder="ex: 500000"
+                                    {...field}
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
                 />
-            </div>
-            <DialogFooter className="pt-4">
-                <DialogClose asChild>
-                    <Button type="button" variant="outline">
-                        Annuler
-                    </Button>
-                </DialogClose>
-                <Button type="submit">Enregistrer</Button>
-            </DialogFooter>
-        </form>
+
+                <DialogFooter className="pt-4">
+                    <DialogClose asChild>
+                        <Button type="button" variant="outline">
+                            Annuler
+                        </Button>
+                    </DialogClose>
+                    <Button type="submit">Enregistrer</Button>
+                </DialogFooter>
+            </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
