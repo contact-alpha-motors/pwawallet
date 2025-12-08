@@ -45,20 +45,21 @@ export function SetBudgetDialog({ open, onOpenChange }: SetBudgetDialogProps) {
 
   const handleSetBudget = (values: z.infer<typeof budgetSchema>) => {
     setBudget(values.budget);
-    onOpenChange(false);
+    onOpenChange(false); // This will now correctly close the dialog
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Définir le budget mensuel</DialogTitle>
-          <DialogDescription>
-            Entrez votre budget mensuel pour suivre vos dépenses.
-          </DialogDescription>
-        </DialogHeader>
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSetBudget)} className="space-y-4 py-4">
+            <form onSubmit={form.handleSubmit(handleSetBudget)} className="space-y-4">
+              <DialogHeader>
+                <DialogTitle>Définir le budget mensuel</DialogTitle>
+                <DialogDescription>
+                  Entrez votre budget mensuel pour suivre vos dépenses.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
                  <FormField
                     control={form.control}
                     name="budget"
@@ -72,12 +73,13 @@ export function SetBudgetDialog({ open, onOpenChange }: SetBudgetDialogProps) {
                         </FormItem>
                     )}
                     />
-                <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                        Annuler
-                    </Button>
-                    <Button type="submit">Enregistrer</Button>
-                </DialogFooter>
+              </div>
+              <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                      Annuler
+                  </Button>
+                  <Button type="submit">Enregistrer</Button>
+              </DialogFooter>
             </form>
         </Form>
       </DialogContent>
