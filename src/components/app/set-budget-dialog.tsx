@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,10 +26,12 @@ const budgetSchema = z.object({
     budget: z.coerce.number().min(0, "Le budget ne peut pas être négatif."),
 });
 
+type BudgetFormValues = z.infer<typeof budgetSchema>;
+
 export function SetBudgetDialog({ open, onOpenChange }: SetBudgetDialogProps) {
   const { budget, setBudget } = useTransactions();
   
-  const form = useForm<z.infer<typeof budgetSchema>>({
+  const form = useForm<BudgetFormValues>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {
         budget: budget || 0,
@@ -42,25 +44,23 @@ export function SetBudgetDialog({ open, onOpenChange }: SetBudgetDialogProps) {
     }
   }, [budget, open, form]);
 
-
-  const handleSetBudget = (values: z.infer<typeof budgetSchema>) => {
+  const handleSetBudget = (values: BudgetFormValues) => {
     setBudget(values.budget);
-    onOpenChange(false); // This will now correctly close the dialog
+    onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Définir le budget mensuel</DialogTitle>
+          <DialogDescription>
+            Entrez votre budget mensuel pour suivre vos dépenses.
+          </DialogDescription>
+        </DialogHeader>
         <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSetBudget)} className="space-y-4">
-              <DialogHeader>
-                <DialogTitle>Définir le budget mensuel</DialogTitle>
-                <DialogDescription>
-                  Entrez votre budget mensuel pour suivre vos dépenses.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="py-4">
-                 <FormField
+                <FormField
                     control={form.control}
                     name="budget"
                     render={({ field }) => (
@@ -69,12 +69,11 @@ export function SetBudgetDialog({ open, onOpenChange }: SetBudgetDialogProps) {
                             <FormControl>
                                 <Input type="number" placeholder="ex: 500000" {...field} />
                             </FormControl>
-                             <FormMessage />
+                            <FormMessage />
                         </FormItem>
                     )}
-                    />
-              </div>
-              <DialogFooter>
+                />
+              <DialogFooter className="pt-4">
                   <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                       Annuler
                   </Button>
