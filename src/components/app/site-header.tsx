@@ -10,10 +10,12 @@ import { ResetDataDialog } from './reset-data-dialog';
 import { useTransactions } from '@/providers/transactions-provider';
 import { format } from 'date-fns';
 import { ManageCategoriesDialog } from './manage-categories-dialog';
+import { SetBudgetDialog } from './set-budget-dialog';
 
 export function SiteHeader() {
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isCategoriesDialogOpen, setIsCategoriesDialogOpen] = useState(false);
+  const [isBudgetDialogOpen, setIsBudgetDialogOpen] = useState(false);
   const { transactions } = useTransactions();
 
   const handleExport = () => {
@@ -52,7 +54,10 @@ export function SiteHeader() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setIsCategoriesDialogOpen(true)}>
+                <DropdownMenuItem onClick={() => alert('Test: Définir le budget')}>
+                    Définir le budget
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => alert('Test: Gérer les catégories')}>
                   <FolderKanban className="mr-2 h-4 w-4" />
                   Gérer les catégories
                 </DropdownMenuItem>
@@ -61,7 +66,7 @@ export function SiteHeader() {
                   Exporter vers Excel
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setIsResetDialogOpen(true)} className="text-destructive">
+                <DropdownMenuItem onClick={() => alert('Test: Réinitialiser les données')} className="text-destructive">
                   Réinitialiser les données
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -71,6 +76,7 @@ export function SiteHeader() {
       </header>
       <ResetDataDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen} />
       <ManageCategoriesDialog open={isCategoriesDialogOpen} onOpenChange={setIsCategoriesDialogOpen} />
+      <SetBudgetDialog open={isBudgetDialogOpen} onOpenChange={setIsBudgetDialogOpen} />
     </>
   );
 }
