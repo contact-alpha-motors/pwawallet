@@ -32,6 +32,8 @@ type BudgetFormValues = z.infer<typeof budgetSchema>;
 export function SetBudgetDialog({ open, onOpenChange }: SetBudgetDialogProps) {
   const { budget, setBudget } = useTransactions();
   
+  console.log('[SetBudgetDialog] Rendering with open =', open);
+
   const form = useForm<BudgetFormValues>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {
@@ -41,17 +43,24 @@ export function SetBudgetDialog({ open, onOpenChange }: SetBudgetDialogProps) {
 
   useEffect(() => {
     if (open) {
+        console.log('[SetBudgetDialog] Resetting form with budget:', budget);
         form.reset({ budget: budget || 0 });
     }
   }, [budget, open, form]);
 
   const handleSetBudget = (values: BudgetFormValues) => {
+    console.log('[SetBudgetDialog] Form submitted with values:', values);
     setBudget(values.budget);
     onOpenChange(false); // Close the dialog on success
   };
 
+  const handleOpenChange = (isOpen: boolean) => {
+    console.log('[SetBudgetDialog] onOpenChange called with:', isOpen);
+    onOpenChange(isOpen);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Définir le budget mensuel</DialogTitle>
@@ -86,3 +95,4 @@ export function SetBudgetDialog({ open, onOpenChange }: SetBudgetDialogProps) {
     </Dialog>
   );
 }
+

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -32,10 +33,14 @@ export function SiteHeader() {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Transactions');
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
+    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-T' });
     saveAs(data, `transactions-${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
+  const handleBudgetOpenChange = (open: boolean) => {
+    console.log('[SiteHeader] Budget dialog state changed to:', open);
+    setIsBudgetDialogOpen(open);
+  }
 
   return (
     <>
@@ -92,7 +97,7 @@ export function SiteHeader() {
       </header>
       <ResetDataDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen} />
       <ManageCategoriesDialog open={isCategoriesDialogOpen} onOpenChange={setIsCategoriesDialogOpen} />
-      <SetBudgetDialog open={isBudgetDialogOpen} onOpenChange={setIsBudgetDialogOpen} />
+      <SetBudgetDialog open={isBudgetDialogOpen} onOpenChange={handleBudgetOpenChange} />
     </>
   );
 }
