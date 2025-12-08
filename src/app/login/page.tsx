@@ -25,13 +25,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth, useUser } from '@/firebase';
 import {
   initiateEmailSignIn,
-  initiateEmailSignUp,
 } from '@/firebase/non-blocking-login';
 import { useRouter } from 'next/navigation';
 import { FirebaseError } from 'firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { Wallet } from 'lucide-react';
-import { linkWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { linkWithCredential, EmailAuthProvider, signInWithCredential } from 'firebase/auth';
 
 
 const signUpSchema = z
@@ -74,6 +73,7 @@ export default function LoginPage() {
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('signup');
   const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -94,8 +94,9 @@ export default function LoginPage() {
   });
 
   const handleSignUp = async (values: z.infer<typeof signUpSchema>) => {
-    if (!auth.currentUser) {
-        throw new Error("Aucun utilisateur n'est connecté pour effectuer la liaison.");
+    if (!auth.currentUser || !auth.currentUser.isAnonymous) {
+        setAuthError("Pour vous inscrire, vous devez être un utilisateur invité. Essayez de vous déconnecter d'abord.");
+        throw new Error("User is not anonymous, cannot link account.");
     }
     const credential = EmailAuthProvider.credential(values.email, values.password);
     try {
@@ -108,10 +109,8 @@ export default function LoginPage() {
     } catch(error) {
         if (error instanceof FirebaseError) {
           if (error.code === 'auth/credential-already-in-use') {
-             // This case is tricky. It means the email is already registered.
-             // The user should sign in instead and we'd need to handle data migration.
-             // For now, we'll just show an error.
-             setAuthError("Cette adresse e-mail est déjà utilisée. Essayez de vous connecter.");
+             setAuthError("Cet e-mail est déjà utilisé. Veuillez vous connecter.");
+             setActiveTab('login'); // Switch to login tab
           } else {
             setAuthError(getFirebaseAuthError(error));
           }
@@ -142,7 +141,6 @@ export default function LoginPage() {
   
   const onFormSubmit = (
     handler: (values: any) => void,
-    form: typeof signUpForm | typeof loginForm
   ) => async (values: any) => {
     setAuthError(null);
     try {
@@ -170,7 +168,7 @@ export default function LoginPage() {
             <h1 className="text-3xl font-bold mt-2">MonPortefeuille</h1>
             <p className="text-muted-foreground">Gérez vos finances personnelles simplement.</p>
         </div>
-        <Tabs defaultValue="signup" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Se connecter</TabsTrigger>
             <TabsTrigger value="signup">S'inscrire</TabsTrigger>
@@ -185,7 +183,7 @@ export default function LoginPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <Form {...loginForm}>
-                  <form onSubmit={loginForm.handleSubmit(onFormSubmit(handleLogin, loginForm))} className="space-y-4">
+                  <form onSubmit={loginForm.handleSubmit(onFormSubmit(handleLogin))} className="space-y-4">
                     <FormField
                       control={loginForm.control}
                       name="email"
@@ -239,7 +237,7 @@ export default function LoginPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <Form {...signUpForm}>
-                  <form onSubmit={signUpForm.handleSubmit(onFormSubmit(handleSignUp, signUpForm))} className="space-y-4">
+                  <form onSubmit={signUpForm.handleSubmit(onFormSubmit(handleSignUp))} className="space-y-4">
                     <FormField
                       control={signUpForm.control}
                       name="email"
