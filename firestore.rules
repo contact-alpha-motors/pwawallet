@@ -1,0 +1,109 @@
+/**
+ * This ruleset enforces a strict user-ownership model for a personal finance
+ * and presence tracking application. The core philosophy is that all sensitive
+ * financial data is completely private and isolated to the authenticated user,
+ * while presence information is broadly visible to other authenticated users to
+ * enable real-time UI features.
+ *
+ * Data Structure:
+ * - /users/{userId}/transactions/{transactionId}: All financial transactions for
+ *   a given user are stored in a subcollection under their unique user ID. This
+ *   path-based scoping is the primary mechanism for ensuring data privacy.
+ * - /presence/{userId}: A top-level collection tracks the online status of
+ *   users. This is separated from the user's private data to allow for more
+ *   permissive read access without exposing sensitive information.
+ *
+ * Key Security Decisions:
+ * - Strict Ownership: A user can only read or write transaction data within their
+ *   own data tree (/users/{userId}/**). Access to other users' data is denied.
+ * - Public Presence, Private Writes: Any authenticated user can read the presence
+ *   status of any other user to see who is online. However, a user can only
+ *   write to their own presence document.
+ * - No User Listing: The rules do not allow for listing documents in the top-level
+ *   /users collection, protecting user privacy.
+ *
+ * Denormalization for Authorization:
+ * This ruleset relies on path-based security. By nesting transactions under
+ * `/users/{userId}`, the `userId` from the path is used to authorize access.
+ * This is highly performant as it avoids extra document reads (`get()` calls)
+ * to check for an ownership field within the document itself.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions to improve readability and maintainability.
+
+    /**
+     * Checks if the request is from an authenticated user.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently authenticated user's UID matches the
+     * provided userId, typically from the document path.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * For state-changing operations (update, delete), ensures the user is the
+     * owner AND that the document they are trying to modify already exists.
+     * This prevents unauthorized modifications and errors on non-existent data.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Rules for the user document container. This path itself
+     *              doesn't store data in this model but allows a user to
+     *              create their own document, a common pattern for profiles.
+     * @path        /users/{userId}
+     * @allow       (create) An authenticated user creating their own user document: request.auth.uid == 'user_abc', path is /users/user_abc.
+     * @deny        (get) A user trying to read another user's document: request.auth.uid == 'user_123', path is /users/user_abc.
+     * @principle   Restricts access to a user's own data tree and allows self-creation of a root user document.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // Explicitly deny listing all users for privacy.
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if false; // User documents are generally not deleted by users.
+
+      /**
+       * @description Secures a user's private financial transactions.
+       * @path        /users/{userId}/transactions/{transactionId}
+       * @allow       (create) A user creating a transaction in their own collection: request.auth.uid == userId.
+       * @deny        (get) A user trying to read a transaction from another user's collection: request.auth.uid != userId.
+       * @principle   Enforces strict document ownership based on the user's path. All operations are restricted to the document owner.
+       */
+      match /transactions/{transactionId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isExistingOwner(userId);
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+
+    /**
+     * @description Manages user presence (online status). Readable by any authenticated
+     *              user but writable only by the owner.
+     * @path        /presence/{userId}
+     * @allow       (get) Any authenticated user can check the presence of another user.
+     * @deny        (create) A user trying to set the presence for another user: request.auth.uid != userId.
+     * @principle   Public read for authenticated users with owner-only writes. This enables real-time features without compromising data integrity.
+     */
+    match /presence/{userId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}
