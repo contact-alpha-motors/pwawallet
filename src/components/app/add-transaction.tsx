@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -7,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus } from "lucide-react";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TransactionForm } from './transaction-form';
+import { ScrollArea } from '../ui/scroll-area';
 
 export function AddTransaction() {
   const [open, setOpen] = useState(false);
@@ -15,6 +17,8 @@ export function AddTransaction() {
   const handleSuccess = () => {
     setOpen(false);
   }
+
+  const form = <TransactionForm onSuccess={handleSuccess} />;
 
   if (isMobile) {
     return (
@@ -32,11 +36,11 @@ export function AddTransaction() {
           <SheetHeader className="p-6 pb-0 flex-shrink-0">
             <SheetTitle>Ajouter une transaction</SheetTitle>
           </SheetHeader>
-          <div className="flex-grow overflow-y-auto">
+          <ScrollArea className="flex-grow">
             <div className="p-6 pt-4">
-                <TransactionForm onSuccess={handleSuccess} />
+                {form}
             </div>
-          </div>
+          </ScrollArea>
         </SheetContent>
       </Sheet>
     );
@@ -57,11 +61,11 @@ export function AddTransaction() {
         <DialogHeader className="p-6 pb-0 flex-shrink-0">
           <DialogTitle>Ajouter une transaction</DialogTitle>
         </DialogHeader>
-        <div className="flex-grow overflow-y-auto">
-          <div className="p-6 pt-4">
-            <TransactionForm onSuccess={handleSuccess} />
-          </div>
-        </div>
+        <ScrollArea className="flex-grow">
+            <div className="p-6 pt-4">
+                {form}
+            </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
