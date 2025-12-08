@@ -77,7 +77,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
     const sorted = [...firestoreTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
     let runningBalance = 0;
-    const withBalance: Transaction[] = sorted.map(t => {
+    const withBalance = sorted.map(t => {
       if (t.type === 'income') {
         runningBalance += t.amount;
       } else {
@@ -86,7 +86,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
       return { ...t, balance: runningBalance };
     });
 
-    return withBalance.reverse();
+    return withBalance.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [firestoreTransactions]);
 
 
@@ -94,8 +94,11 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
     if (transactions.length === 0) {
       return 0;
     }
-    // Since we reversed the array, the latest transaction is at index 0
-    return transactions[0].balance;
+    // The array is sorted descending by date, so the latest transaction is at index 0.
+    const latestTransaction = transactions.reduce((latest, current) => {
+        return new Date(current.date) > new Date(latest.date) ? current : latest;
+    });
+    return latestTransaction.balance;
   }, [transactions]);
 
   const addTransaction = useCallback(async (transaction: Omit<Transaction, 'id' | 'date' | 'balance'> & { date: Date }) => {

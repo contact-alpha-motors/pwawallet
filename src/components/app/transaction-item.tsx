@@ -45,7 +45,7 @@ export function TransactionItem({ transaction }: TransactionItemProps) {
            }
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold truncate" title={transaction.beneficiary}>{transaction.beneficiary}</p>
+          <p className="font-semibold truncate" title={transaction.beneficiary}>{transaction.beneficiary || transaction.description || "Revenu"}</p>
           <p className="text-sm text-muted-foreground truncate">
             {transaction.description}
           </p>
