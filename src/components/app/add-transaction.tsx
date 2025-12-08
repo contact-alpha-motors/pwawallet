@@ -25,7 +25,7 @@ export function AddTransaction({ budgetId }: AddTransactionProps) {
 
   if (isMobile) {
     return (
-      <Sheet open={open} onOpenChange={setOpen}>
+      <Sheet open={open} onOpenChange={setOpen} modal={false}>
         <SheetTrigger asChild>
           <Button
             className="fixed bottom-4 right-4 h-16 w-16 rounded-full shadow-lg"
@@ -50,7 +50,7 @@ export function AddTransaction({ budgetId }: AddTransactionProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={setOpen} modal={false}>
       <DialogTrigger asChild>
         <Button
           className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg"
