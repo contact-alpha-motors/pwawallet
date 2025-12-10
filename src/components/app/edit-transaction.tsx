@@ -186,19 +186,6 @@ export function EditTransaction({ open, onOpenChange, transaction }: EditTransac
             )}
             <FormField
             control={form.control}
-            name="amount"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Montant</FormLabel>
-                <FormControl>
-                    <Input type="number" placeholder="0.00" {...field} />
-                </FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
-            <FormField
-            control={form.control}
             name="beneficiary"
             render={({ field }) => (
                 <FormItem>
@@ -225,27 +212,18 @@ export function EditTransaction({ open, onOpenChange, transaction }: EditTransac
             />
             <FormField
             control={form.control}
-            name="category"
+            name="amount"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Catégorie {isExpense && <span className="text-destructive">*</span>}</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner une catégorie" />
-                    </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                    {categories.map(cat => (
-                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                    ))}
-                    </SelectContent>
-                </Select>
+                <FormLabel>Montant</FormLabel>
+                <FormControl>
+                    <Input type="number" placeholder="0.00" {...field} />
+                </FormControl>
                 <FormMessage />
                 </FormItem>
             )}
             />
-            <FormField
+             <FormField
             control={form.control}
             name="domain"
             render={({ field }) => (
@@ -260,6 +238,28 @@ export function EditTransaction({ open, onOpenChange, transaction }: EditTransac
                     <SelectContent>
                     {domains.map(dom => (
                         <SelectItem key={dom} value={dom}>{dom}</SelectItem>
+                    ))}
+                    </SelectContent>
+                </Select>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+            <FormField
+            control={form.control}
+            name="category"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Catégorie {isExpense && <span className="text-destructive">*</span>}</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner une catégorie" />
+                    </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                    {categories.map(cat => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
                     </SelectContent>
                 </Select>
