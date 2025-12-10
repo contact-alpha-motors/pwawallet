@@ -26,6 +26,7 @@ export interface TransactionFirestore {
   beneficiary: string;
   domain: string;
   budgetId?: string;
+  index: number; // Timestamp for ordering
 }
 
 // This represents the data structure in the client, with the calculated balance

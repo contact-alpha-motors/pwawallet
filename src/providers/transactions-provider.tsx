@@ -5,13 +5,14 @@ import type { Transaction, TransactionFirestore, Budget } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useCollection, useFirebase, useUser, useMemoFirebase } from '@/firebase';
 import { collection, doc, writeBatch, setDoc } from 'firebase/firestore';
-import { addDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { addDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 
 interface TransactionsContextType {
   transactions: Transaction[];
-  addTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'balance' | 'budgetId'> & { date: Date, budgetId?: string }) => void;
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'balance' | 'index' | 'budgetId'> & { date: Date, budgetId?: string }) => void;
+  updateTransaction: (id: string, transaction: Omit<Transaction, 'id' | 'date' | 'balance' | 'index'> & { date: Date }) => void;
   deleteTransaction: (id: string) => void;
   clearTransactions: () => void;
   getLatestBalance: () => number;
@@ -20,6 +21,7 @@ interface TransactionsContextType {
   budgets: Budget[];
   budgetsLoading: boolean;
   addBudget: (budget: Omit<Budget, 'id'>) => void;
+  updateBudget: (id: string, budget: Omit<Budget, 'id'>) => void;
   deleteBudget: (id: string) => void;
 }
 
@@ -75,7 +77,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
   const transactions = useMemo(() => {
     if (!firestoreTransactions) return [];
 
-    const sorted = [...firestoreTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const sorted = [...firestoreTransactions].sort((a, b) => a.index - b.index);
     
     let runningBalance = 0;
     const withBalance = sorted.map(t => {
@@ -87,7 +89,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
       return { ...t, balance: runningBalance };
     });
 
-    return withBalance.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return withBalance.sort((a, b) => b.index - a.index);
   }, [firestoreTransactions]);
 
 
@@ -95,14 +97,13 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
     if (transactions.length === 0) {
       return 0;
     }
-    // The array is sorted descending by date, so the latest transaction is at index 0.
     const latestTransaction = transactions.reduce((latest, current) => {
-        return new Date(current.date) > new Date(latest.date) ? current : latest;
+        return current.index > latest.index ? current : latest;
     });
     return latestTransaction.balance;
   }, [transactions]);
 
-  const addTransaction = useCallback(async (transaction: Omit<Transaction, 'id' | 'date' | 'balance'> & { date: Date }) => {
+  const addTransaction = useCallback(async (transaction: Omit<Transaction, 'id' | 'date' | 'balance' | 'index'> & { date: Date }) => {
     if (!firestore || !user) {
         toast({
             variant: "destructive",
@@ -118,6 +119,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
         ...transaction,
         id: newTransactionId,
         date: transaction.date.toISOString(),
+        index: Date.now(),
     };
     
     addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'transactions'), transactionData);
@@ -128,6 +130,29 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
     });
 
   }, [firestore, user, toast]);
+
+  const updateTransaction = useCallback(async (id: string, transaction: Omit<Transaction, 'id' | 'date' | 'balance' | 'index'> & { date: Date }) => {
+     if (!firestore || !user) {
+        toast({
+            variant: "destructive",
+            title: "Erreur",
+            description: "Impossible de modifier la transaction. Utilisateur non connecté.",
+        });
+        return;
+    }
+    const currentTransaction = firestoreTransactions?.find(t => t.id === id);
+    if (!currentTransaction) return;
+
+    const transactionData = {
+        ...transaction,
+        date: transaction.date.toISOString(),
+        index: currentTransaction.index, // Keep original index to maintain order
+    };
+
+    const docRef = doc(firestore, 'users', user.uid, 'transactions', id);
+    updateDocumentNonBlocking(docRef, transactionData);
+    toast({ title: "Transaction modifiée" });
+  }, [firestore, user, toast, firestoreTransactions]);
 
   const deleteTransaction = useCallback(async (id: string) => {
     if (!firestore || !user) {
@@ -186,6 +211,20 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
     });
   }, [firestore, user, toast]);
 
+  const updateBudget = useCallback((id: string, budget: Omit<Budget, 'id'>) => {
+     if (!firestore || !user) {
+        toast({
+            variant: "destructive",
+            title: "Erreur",
+            description: "Impossible de modifier le budget. Utilisateur non connecté."
+        });
+        return;
+    }
+    const docRef = doc(firestore, 'users', user.uid, 'budgets', id);
+    updateDocumentNonBlocking(docRef, budget);
+    toast({ title: "Budget modifié" });
+  }, [firestore, user, toast]);
+
   const deleteBudget = useCallback((id: string) => {
     if (!firestore || !user) {
         toast({
@@ -204,6 +243,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
   const value = useMemo(() => ({
     transactions,
     addTransaction,
+    updateTransaction,
     deleteTransaction,
     clearTransactions,
     getLatestBalance,
@@ -212,8 +252,9 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
     budgets: budgets || [],
     budgetsLoading,
     addBudget,
+    updateBudget,
     deleteBudget,
-  }), [transactions, addTransaction, deleteTransaction, clearTransactions, getLatestBalance, isOffline, transactionsLoading, budgets, budgetsLoading, addBudget, deleteBudget]);
+  }), [transactions, addTransaction, updateTransaction, deleteTransaction, clearTransactions, getLatestBalance, isOffline, transactionsLoading, budgets, budgetsLoading, addBudget, updateBudget, deleteBudget]);
 
   return (
     <TransactionsContext.Provider value={value}>

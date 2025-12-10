@@ -1,0 +1,155 @@
+{
+  "entities": {
+    "Transaction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Transaction",
+      "type": "object",
+      "description": "Represents a financial transaction (expense or income).",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the transaction."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount of the transaction (positive for income, negative for expense)."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the transaction."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category of the transaction (e.g., Food, Transportation, Salary)."
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of the transaction (expense or income).",
+          "format": "string"
+        },
+        "beneficiary": {
+          "type": "string",
+          "description": "The beneficiary of the transaction."
+        },
+        "reason": {
+          "type": "string",
+          "description": "The reason for the transaction."
+        },
+        "domain": {
+          "type": "string",
+          "description": "The domain related to the transaction."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date of the transaction.",
+          "format": "date-time"
+        },
+        "budgetId": {
+            "type": "string",
+            "description": "The ID of the budget this transaction belongs to."
+        },
+        "index": {
+            "type": "number",
+            "description": "A timestamp used for chronological ordering of transactions."
+        }
+      },
+      "required": [
+        "id",
+        "amount",
+        "description",
+        "category",
+        "type",
+        "date",
+        "index"
+      ]
+    },
+    "Budget": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Budget",
+      "type": "object",
+      "description": "Represents a budget with a name and an allocated amount.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the budget."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the budget (e.g., 'Vacances d'été')."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The total amount allocated to this budget."
+        }
+      },
+      "required": ["id", "name", "amount"]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}/transactions/{transactionId}",
+        "definition": {
+          "entityName": "Transaction",
+          "schema": {
+            "$ref": "#/backend/entities/Transaction"
+          },
+          "description": "Stores individual transaction data for a specific user. The transactionId is a unique identifier generated on the client. Transactions are owned by the user, ensuring only the user can access them.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "transactionId",
+              "description": "The unique identifier for the transaction."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/budgets/{budgetId}",
+        "definition": {
+            "entityName": "Budget",
+            "schema": {
+                "$ref": "#/backend/entities/Budget"
+            },
+            "description": "Stores budget data for a specific user.",
+            "params": [
+                {
+                    "name": "userId",
+                    "description": "The unique identifier for the user."
+                },
+                {
+                    "name": "budgetId",
+                    "description": "The unique identifier for the budget."
+                }
+            ]
+        }
+      },
+      {
+        "path": "/presence/{userId}",
+        "definition": {
+          "entityName": "presence",
+          "schema": {
+            "$ref": "#/backend/entities/presence"
+          },
+          "description": "Stores user online presence and last active timestamp.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "Given the application's focus on personal finance tracking and the requirement for offline persistence, the data structure prioritizes user-specific data isolation and simplicity. Transactions are stored within user-specific collections, enabling easy querying and management of individual financial data. To visually display a user's online/offline presence in real-time a dedicated `presence` collection is created, which stores connection state and a timestamp and is updated on connect/disconnect to Firestore.\n\n*   **Authorization Independence:**  Transactions are scoped under `/users/{userId}`. This eliminates the need for `get()` calls in security rules to validate user ownership because the path itself establishes ownership.\n*   **QAPs (List Operations):** Listing transactions is inherently secure because each user can only access their own transactions within the `/users/{userId}/transactions` collection. The segregation of transactions by user ID ensures that list operations only return data that the user is authorized to see."
+  }
+}
