@@ -4,14 +4,14 @@ export type Domain =
   | 'Bureau'
   | 'Showroom'
   | 'Prestataire Externe'
-  | 'Besoins'
+  | 'Besoins du PDG'
   | 'Autre';
 
 export const defaultDomains: readonly string[] = [
   'Bureau',
   'Showroom',
   'Prestataire Externe',
-  'Besoins',
+  'Besoins du PDG',
   'Autre',
 ];
 
