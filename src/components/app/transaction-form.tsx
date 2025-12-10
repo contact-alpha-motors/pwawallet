@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useWatch } from "react-hook-form";
-import { Button } from "@/components/ui/button";
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm, useWatch } from 'react-hook-form';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -11,63 +11,76 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { cn } from "@/lib/utils";
-import { useTransactions } from "@/providers/transactions-provider";
-import { useCategories } from "@/providers/categories-provider";
-import { defaultDomains } from "@/lib/types";
+import { cn } from '@/lib/utils';
+import { useTransactions } from '@/providers/transactions-provider';
+import { useCategories } from '@/providers/categories-provider';
+import { useDomains } from '@/providers/domains-provider';
 
-const formSchema = z.object({
-  amount: z.coerce.number().positive("Le montant doit être positif"),
-  description: z.string().optional(),
-  beneficiary: z.string().optional(),
-  category: z.string().optional(),
-  domain: z.string().optional(),
-  type: z.enum(["income", "expense"]),
-  date: z.date(),
-  budgetId: z.string().optional(),
-}).refine(data => {
-    if (data.type === 'expense') {
+const formSchema = z
+  .object({
+    amount: z.coerce.number().positive('Le montant doit être positif'),
+    description: z.string().optional(),
+    beneficiary: z.string().optional(),
+    category: z.string().optional(),
+    domain: z.string().optional(),
+    type: z.enum(['income', 'expense']),
+    date: z.date(),
+    budgetId: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.type === 'expense') {
         return !!data.beneficiary && data.beneficiary.length >= 2;
+      }
+      return true;
+    },
+    {
+      message: 'Le bénéficiaire doit comporter au moins 2 caractères.',
+      path: ['beneficiary'],
     }
-    return true;
-}, {
-    message: "Le bénéficiaire doit comporter au moins 2 caractères.",
-    path: ['beneficiary']
-}).refine(data => {
-    if (data.type === 'expense') {
+  )
+  .refine(
+    (data) => {
+      if (data.type === 'expense') {
         return !!data.category && data.category.length >= 1;
+      }
+      return true;
+    },
+    {
+      message: 'Veuillez sélectionner une catégorie.',
+      path: ['category'],
     }
-    return true;
-}, {
-    message: "Veuillez sélectionner une catégorie.",
-    path: ['category']
-}).refine(data => {
-    if (data.type === 'expense') {
+  )
+  .refine(
+    (data) => {
+      if (data.type === 'expense') {
         return !!data.domain && data.domain.length >= 1;
+      }
+      return true;
+    },
+    {
+      message: 'Veuillez sélectionner un domaine.',
+      path: ['domain'],
     }
-    return true;
-}, {
-    message: "Veuillez sélectionner un domaine.",
-    path: ['domain']
-});
+  );
 
 type TransactionFormValues = z.infer<typeof formSchema>;
 
@@ -76,38 +89,41 @@ interface TransactionFormProps {
   budgetId?: string;
 }
 
-export function TransactionForm({ onSuccess, budgetId: defaultBudgetId }: TransactionFormProps) {
+export function TransactionForm({
+  onSuccess,
+  budgetId: defaultBudgetId,
+}: TransactionFormProps) {
   const { addTransaction, isOffline, budgets } = useTransactions();
   const { categories } = useCategories();
+  const { domains } = useDomains();
 
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       amount: 0,
-      description: "",
-      beneficiary: "",
-      type: "expense",
+      description: '',
+      beneficiary: '',
+      type: 'expense',
       date: new Date(),
-      category: "",
-      domain: "",
-      budgetId: defaultBudgetId || "",
+      category: '',
+      domain: '',
+      budgetId: defaultBudgetId || '',
     },
   });
 
   const transactionType = useWatch({
     control: form.control,
-    name: 'type'
+    name: 'type',
   });
   const isExpense = transactionType === 'expense';
-
 
   function onSubmit(values: TransactionFormValues) {
     addTransaction({
       ...values,
-      description: values.description || "",
-      beneficiary: values.beneficiary || "",
-      category: values.category || "",
-      domain: values.domain || "",
+      description: values.description || '',
+      beneficiary: values.beneficiary || '',
+      category: values.category || '',
+      domain: values.domain || '',
       budgetId: values.budgetId || undefined,
     });
     form.reset({
@@ -116,7 +132,7 @@ export function TransactionForm({ onSuccess, budgetId: defaultBudgetId }: Transa
       description: '',
       beneficiary: '',
       // keep budgetId if it was passed as default
-      budgetId: defaultBudgetId || ''
+      budgetId: defaultBudgetId || '',
     });
     onSuccess?.();
   }
@@ -146,28 +162,34 @@ export function TransactionForm({ onSuccess, budgetId: defaultBudgetId }: Transa
           )}
         />
         {isExpense && (
-            <FormField
-              control={form.control}
-              name="budgetId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Budget</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!defaultBudgetId}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Lier à un budget (optionnel)" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {budgets.map(b => (
-                        <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <FormField
+            control={form.control}
+            name="budgetId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Budget</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  disabled={!!defaultBudgetId}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Lier à un budget (optionnel)" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {budgets.map((b) => (
+                      <SelectItem key={b.id} value={b.id}>
+                        {b.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         )}
         <FormField
           control={form.control}
@@ -187,7 +209,9 @@ export function TransactionForm({ onSuccess, budgetId: defaultBudgetId }: Transa
           name="beneficiary"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Bénéficiaire {isExpense && <span className="text-destructive">*</span>}</FormLabel>
+              <FormLabel>
+                Bénéficiaire {isExpense && <span className="text-destructive">*</span>}
+              </FormLabel>
               <FormControl>
                 <Input placeholder="ex: John Doe" {...field} />
               </FormControl>
@@ -213,7 +237,9 @@ export function TransactionForm({ onSuccess, budgetId: defaultBudgetId }: Transa
           name="category"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Catégorie {isExpense && <span className="text-destructive">*</span>}</FormLabel>
+              <FormLabel>
+                Catégorie {isExpense && <span className="text-destructive">*</span>}
+              </FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -221,8 +247,10 @@ export function TransactionForm({ onSuccess, budgetId: defaultBudgetId }: Transa
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {categories.map(cat => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -235,7 +263,9 @@ export function TransactionForm({ onSuccess, budgetId: defaultBudgetId }: Transa
           name="domain"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Domaine {isExpense && <span className="text-destructive">*</span>}</FormLabel>
+              <FormLabel>
+                Domaine {isExpense && <span className="text-destructive">*</span>}
+              </FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -243,8 +273,10 @@ export function TransactionForm({ onSuccess, budgetId: defaultBudgetId }: Transa
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {(defaultDomains as readonly string[]).map(dom => (
-                    <SelectItem key={dom} value={dom}>{dom}</SelectItem>
+                  {domains.map((dom) => (
+                    <SelectItem key={dom} value={dom}>
+                      {dom}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -262,14 +294,14 @@ export function TransactionForm({ onSuccess, budgetId: defaultBudgetId }: Transa
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
-                      variant={"outline"}
+                      variant={'outline'}
                       className={cn(
-                        "pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
+                        'pl-3 text-left font-normal',
+                        !field.value && 'text-muted-foreground'
                       )}
                     >
                       {field.value ? (
-                        format(field.value, "PPP", { locale: fr })
+                        format(field.value, 'PPP', { locale: fr })
                       ) : (
                         <span>Choisir une date</span>
                       )}
@@ -290,8 +322,16 @@ export function TransactionForm({ onSuccess, budgetId: defaultBudgetId }: Transa
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? 'Ajout...' : isOffline ? 'Ajouter hors ligne' : 'Ajouter la transaction'}
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={form.formState.isSubmitting}
+        >
+          {form.formState.isSubmitting
+            ? 'Ajout...'
+            : isOffline
+            ? 'Ajouter hors ligne'
+            : 'Ajouter la transaction'}
         </Button>
       </form>
     </Form>

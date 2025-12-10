@@ -1,18 +1,24 @@
 export type TransactionType = 'income' | 'expense';
 
-export type Domain = 'Bureau' | 'Showroom' | 'Prestataire Externe' | 'Autre';
+export type Domain =
+  | 'Bureau'
+  | 'Showroom'
+  | 'Prestataire Externe'
+  | 'Besoins'
+  | 'Autre';
 
-export const defaultDomains: readonly Domain[] = [
+export const defaultDomains: readonly string[] = [
   'Bureau',
   'Showroom',
   'Prestataire Externe',
+  'Besoins',
   'Autre',
 ];
 
 export interface Budget {
-    id: string;
-    name: string;
-    amount: number;
+  id: string;
+  name: string;
+  amount: number;
 }
 
 // This represents the data structure in Firestore
@@ -33,7 +39,6 @@ export interface TransactionFirestore {
 export type Transaction = TransactionFirestore & {
   balance: number;
 };
-
 
 export const defaultCategories = [
   'Nourriture',

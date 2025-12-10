@@ -32,11 +32,12 @@ import { fr } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
 import { useTransactions } from "@/providers/transactions-provider";
 import { useCategories } from "@/providers/categories-provider";
-import { defaultDomains, type Transaction } from "@/lib/types";
+import { type Transaction } from "@/lib/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
+import { useDomains } from "@/providers/domains-provider";
 
 const formSchema = z.object({
   amount: z.coerce.number().positive("Le montant doit être positif"),
@@ -84,6 +85,7 @@ interface EditTransactionProps {
 export function EditTransaction({ open, onOpenChange, transaction }: EditTransactionProps) {
   const { updateTransaction, budgets } = useTransactions();
   const { categories } = useCategories();
+  const { domains } = useDomains();
   const isMobile = useIsMobile();
 
   const form = useForm<TransactionFormValues>({
@@ -256,7 +258,7 @@ export function EditTransaction({ open, onOpenChange, transaction }: EditTransac
                     </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                    {(defaultDomains as readonly string[]).map(dom => (
+                    {domains.map(dom => (
                         <SelectItem key={dom} value={dom}>{dom}</SelectItem>
                     ))}
                     </SelectContent>
@@ -328,7 +330,7 @@ export function EditTransaction({ open, onOpenChange, transaction }: EditTransac
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
       <DialogContent className="max-h-[90dvh] flex flex-col p-0">
         <DialogHeader className="p-6 pb-0 flex-shrink-0">
           <DialogTitle>Modifier la transaction</DialogTitle>
