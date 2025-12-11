@@ -35,6 +35,77 @@ import { Dialog, DialogTrigger } from '../ui/dialog';
 import Link from 'next/link';
 import { usePresence } from '@/providers/presence-provider';
 import { ManageDomainsDialog } from './manage-domains-dialog';
+import type { Budget, Transaction } from '@/lib/types';
+
+const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(amount);
+};
+
+export function exportBudgetsToExcel(
+    budgets: Budget[], 
+    transactions: Transaction[], 
+    specificBudgetId?: string
+) {
+    const workbook = XLSX.utils.book_new();
+
+    const budgetsToExport = specificBudgetId 
+        ? budgets.filter(b => b.id === specificBudgetId)
+        : [...budgets, { id: 'unbudgeted', name: 'Hors budget', amount: 0 }];
+
+    budgetsToExport.forEach(budget => {
+        const budgetTransactions = transactions.filter(t => {
+            if (budget.id === 'unbudgeted') return !t.budgetId;
+            return t.budgetId === budget.id;
+        });
+
+        if (specificBudgetId && budgetTransactions.length === 0) return;
+
+        const spent = budgetTransactions
+            .filter(t => t.type === 'expense')
+            .reduce((sum, t) => sum + t.amount, 0);
+        const remaining = budget.id === 'unbudgeted' ? 0 : budget.amount - spent;
+
+        const summary = [
+            { A: 'Budget:', B: budget.name },
+            { A: 'Alloué:', B: budget.id === 'unbudgeted' ? 'N/A' : formatCurrency(budget.amount) },
+            { A: 'Dépensé:', B: formatCurrency(spent) },
+            { A: 'Restant:', B: budget.id === 'unbudgeted' ? 'N/A' : formatCurrency(remaining) },
+            {}, // Empty row
+        ];
+
+        const transactionsData = budgetTransactions.map(t => ({
+            'Date': format(new Date(t.date), 'yyyy-MM-dd'),
+            'Bénéficiaire': t.beneficiary,
+            'Motif': t.description,
+            'Montant': t.amount * (t.type === 'income' ? 1 : -1),
+            'Type': t.type === 'income' ? 'Revenu' : 'Dépense',
+            'Catégorie': t.category,
+            'Domaine': t.domain,
+        }));
+        
+        const worksheet = XLSX.utils.json_to_sheet(summary, { skipHeader: true });
+        XLSX.utils.sheet_add_json(worksheet, transactionsData, { origin: 'A6' });
+        
+        // Set column widths
+        worksheet['!cols'] = [
+            { wch: 15 }, { wch: 25 }, { wch: 30 }, { wch: 12 },
+            { wch: 10 }, { wch: 20 }, { wch: 20 }
+        ];
+
+        // Sheet names can't be longer than 31 chars and can't contain certain chars
+        const safeSheetName = budget.name.substring(0, 31).replace(/[\\/*?[\]:]/g, "");
+        XLSX.utils.book_append_sheet(workbook, worksheet, safeSheetName);
+    });
+
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
+    const fileName = specificBudgetId
+        ? `budget-${budgets.find(b => b.id === specificBudgetId)?.name.replace(/\s+/g, '_') ?? 'export'}.xlsx`
+        : `export_budgets_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+    saveAs(data, fileName);
+}
+
 
 export function SiteHeader() {
   const auth = useAuth();
@@ -44,32 +115,11 @@ export function SiteHeader() {
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isCategoriesDialogOpen, setIsCategoriesDialogOpen] = useState(false);
   const [isDomainsDialogOpen, setIsDomainsDialogOpen] = useState(false);
-  const { transactions } = useTransactions();
+  const { transactions, budgets } = useTransactions();
   const { isOnline } = usePresence();
 
   const handleExport = () => {
-    const worksheet = XLSX.utils.json_to_sheet(
-      transactions.map((t) => ({
-        Date: format(new Date(t.date), 'yyyy-MM-dd'),
-        Bénéficiaire: t.beneficiary,
-        Motif: t.description,
-        Montant: t.amount,
-        Type: t.type === 'income' ? 'Revenu' : 'Dépense',
-        Catégorie: t.category,
-        Domaine: t.domain,
-        Solde: t.balance,
-      }))
-    );
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Transactions');
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: 'xlsx',
-      type: 'array',
-    });
-    const data = new Blob([excelBuffer], {
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8',
-    });
-    saveAs(data, `transactions-${new Date().toISOString().split('T')[0]}.xlsx`);
+    exportBudgetsToExcel(budgets, transactions);
   };
 
   const handleLogout = () => {

@@ -3,13 +3,13 @@
 import { useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useTransactions } from '@/providers/transactions-provider';
-import { SiteHeader } from '@/components/app/site-header';
+import { SiteHeader, exportBudgetsToExcel } from '@/components/app/site-header';
 import { AddTransaction } from '@/components/app/add-transaction';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TransactionHistory } from '@/components/app/transaction-history';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, FileDown } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
@@ -38,6 +38,12 @@ export default function BudgetDetailPage() {
         };
     }, [budgetId, budgets, transactions]);
 
+    const handleExport = () => {
+        if (budgetDetails) {
+            exportBudgetsToExcel(budgets, transactions, budgetId);
+        }
+    };
+
     if (isLoading) {
         return (
             <div className="flex flex-col min-h-dvh bg-background font-body">
@@ -59,7 +65,7 @@ export default function BudgetDetailPage() {
                     <h1 className="text-2xl font-bold">Budget non trouvé</h1>
                     <p className="text-muted-foreground">Le budget que vous cherchez n'existe pas.</p>
                      <Button asChild variant="outline" className="mt-4">
-                        <Link href="/budgets">
+                        <Link href="/">
                             <ArrowLeft className="mr-2 h-4 w-4" />
                             Retour aux budgets
                         </Link>
@@ -76,13 +82,19 @@ export default function BudgetDetailPage() {
         <div className="flex flex-col min-h-dvh bg-background font-body">
             <SiteHeader />
             <main className="flex-1 w-full max-w-4xl mx-auto p-4 md:p-6 space-y-6">
-                <div className="flex items-center gap-4">
-                    <Button asChild variant="outline" size="icon">
-                        <Link href="/budgets">
-                            <ArrowLeft />
-                        </Link>
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                        <Button asChild variant="outline" size="icon">
+                            <Link href="/">
+                                <ArrowLeft />
+                            </Link>
+                        </Button>
+                        <h1 className="text-2xl font-bold">Budget: {budgetDetails.name}</h1>
+                    </div>
+                    <Button variant="outline" onClick={handleExport}>
+                        <FileDown className="mr-2 h-4 w-4" />
+                        Exporter
                     </Button>
-                    <h1 className="text-2xl font-bold">Budget: {budgetDetails.name}</h1>
                 </div>
 
                 <Card>
