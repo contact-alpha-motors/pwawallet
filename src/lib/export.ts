@@ -1,3 +1,4 @@
+
 'use client';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -169,9 +170,11 @@ export async function exportToWord(
     if (budget.transactions.length > 0) {
       const header = new TableRow({
         children: [
-          new TableCell({ text: 'Date', children: [new Paragraph({ text: "Date", style: "strong" })] }),
-          new TableCell({ text: 'Bénéficiaire', children: [new Paragraph({ text: "Bénéficiaire", style: "strong" })] }),
-          new TableCell({ text: 'Montant', children: [new Paragraph({ text: "Montant", style: "strong" })] }),
+          new TableCell({ children: [new Paragraph({ text: "Motif", style: "strong" })] }),
+          new TableCell({ children: [new Paragraph({ text: "Domaine", style: "strong" })] }),
+          new TableCell({ children: [new Paragraph({ text: "Date", style: "strong" })] }),
+          new TableCell({ children: [new Paragraph({ text: "Bénéficiaire", style: "strong" })] }),
+          new TableCell({ children: [new Paragraph({ text: "Montant", style: "strong" })] }),
         ],
       });
 
@@ -179,9 +182,11 @@ export async function exportToWord(
         (t) =>
           new TableRow({
             children: [
-              new TableCell({ text: format(new Date(t.date), 'dd/MM/yyyy'), children: [new Paragraph(format(new Date(t.date), 'dd/MM/yyyy'))] }),
-              new TableCell({ text: t.beneficiary || t.description, children: [new Paragraph(t.beneficiary || t.description)] }),
-              new TableCell({ text: formatCurrency(t.amount * (t.type === 'income' ? 1 : -1)), children: [new Paragraph(formatCurrency(t.amount * (t.type === 'income' ? 1 : -1)))] }),
+              new TableCell({ children: [new Paragraph(t.description)] }),
+              new TableCell({ children: [new Paragraph(t.domain)] }),
+              new TableCell({ children: [new Paragraph(format(new Date(t.date), 'dd/MM/yyyy'))] }),
+              new TableCell({ children: [new Paragraph(t.beneficiary)] }),
+              new TableCell({ children: [new Paragraph(formatCurrency(t.amount * (t.type === 'income' ? 1 : -1)))] }),
             ],
           })
       );
