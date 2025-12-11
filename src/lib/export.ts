@@ -170,23 +170,25 @@ export async function exportToWord(
     if (budget.transactions.length > 0) {
       const header = new TableRow({
         children: [
-          new TableCell({ children: [new Paragraph({ text: "Motif", style: "strong" })] }),
-          new TableCell({ children: [new Paragraph({ text: "Domaine", style: "strong" })] }),
+          new TableCell({ children: [new Paragraph({ text: "N°", style: "strong" })] }),
           new TableCell({ children: [new Paragraph({ text: "Date", style: "strong" })] }),
           new TableCell({ children: [new Paragraph({ text: "Bénéficiaire", style: "strong" })] }),
+          new TableCell({ children: [new Paragraph({ text: "Motif", style: "strong" })] }),
           new TableCell({ children: [new Paragraph({ text: "Montant", style: "strong" })] }),
+          new TableCell({ children: [new Paragraph({ text: "Domaine", style: "strong" })] }),
         ],
       });
 
       const rows = budget.transactions.map(
-        (t) =>
+        (t, index) =>
           new TableRow({
             children: [
-              new TableCell({ children: [new Paragraph(t.description)] }),
-              new TableCell({ children: [new Paragraph(t.domain)] }),
+              new TableCell({ children: [new Paragraph(String(index + 1))] }),
               new TableCell({ children: [new Paragraph(format(new Date(t.date), 'dd/MM/yyyy'))] }),
               new TableCell({ children: [new Paragraph(t.beneficiary)] }),
+              new TableCell({ children: [new Paragraph(t.description)] }),
               new TableCell({ children: [new Paragraph(formatCurrency(t.amount * (t.type === 'income' ? 1 : -1)))] }),
+              new TableCell({ children: [new Paragraph(t.domain)] }),
             ],
           })
       );
@@ -242,12 +244,12 @@ export function exportToMarkdown(
     }\n\n`;
 
     if (budget.transactions.length > 0) {
-      markdownString += '| Date | Bénéficiaire/Motif | Montant |\n';
-      markdownString += '|:---|:---|---:|\n';
-      budget.transactions.forEach((t) => {
-        markdownString += `| ${format(new Date(t.date), 'dd/MM/yyyy')} | ${
-          t.beneficiary || t.description
-        } | ${formatCurrency(t.amount * (t.type === 'income' ? 1 : -1))} |\n`;
+      markdownString += '| N° | Date | Bénéficiaire | Motif | Montant | Domaine |\n';
+      markdownString += '|:---|:---|:---|:---|---:|:---|\n';
+      budget.transactions.forEach((t, index) => {
+        markdownString += `| ${index + 1} | ${format(new Date(t.date), 'dd/MM/yyyy')} | ${
+          t.beneficiary
+        } | ${t.description} | ${formatCurrency(t.amount * (t.type === 'income' ? 1 : -1))} | ${t.domain} |\n`;
       });
     }
     markdownString += `\n---\n\n`;
