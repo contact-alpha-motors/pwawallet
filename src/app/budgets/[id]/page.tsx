@@ -3,15 +3,16 @@
 import { useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useTransactions } from '@/providers/transactions-provider';
-import { SiteHeader, exportBudgetsToExcel } from '@/components/app/site-header';
+import { SiteHeader } from '@/components/app/site-header';
 import { AddTransaction } from '@/components/app/add-transaction';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TransactionHistory } from '@/components/app/transaction-history';
-import { ArrowLeft, FileDown } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { ExportMenu } from '@/components/app/export-menu';
 
 const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(amount);
@@ -37,12 +38,6 @@ export default function BudgetDetailPage() {
             transactions: budgetTransactions,
         };
     }, [budgetId, budgets, transactions]);
-
-    const handleExport = () => {
-        if (budgetDetails) {
-            exportBudgetsToExcel(budgets, transactions, budgetId);
-        }
-    };
 
     if (isLoading) {
         return (
@@ -91,10 +86,7 @@ export default function BudgetDetailPage() {
                         </Button>
                         <h1 className="text-2xl font-bold">Budget: {budgetDetails.name}</h1>
                     </div>
-                    <Button variant="outline" onClick={handleExport}>
-                        <FileDown className="mr-2 h-4 w-4" />
-                        Exporter
-                    </Button>
+                    <ExportMenu specificBudgetId={budgetDetails.id} />
                 </div>
 
                 <Card>
